@@ -1,0 +1,60 @@
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+ENV/
+
+# Build Output
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs & Temporary Files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+*.txt
+temp_*
+
+# Documentation & Guides
+*.md
+*.html
+
+# Database Scripts
+*.sql
+
+# Backend Cleanup - EXCLUDE ALL BY DEFAULT
+backend/*
+!backend/main.py
+!backend/requirements.txt
+!backend/Procfile
+!backend/system_prompt.json
+!backend/.env.example 
+# (If we had a .env.example we would keep it, but we don't, so just being safe)
+
+# Frontend is usually fine, but exclude specific scripts if needed
+frontend/scripts/
+frontend/*.ps1
+frontend/*.js
+!frontend/*.config.js
+!frontend/package.json
