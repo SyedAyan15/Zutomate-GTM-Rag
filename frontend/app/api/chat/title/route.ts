@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/chat', '/generate_title')?.replace('/upload', '/generate_title') || 'http://127.0.0.1:8000/generate_title'
+        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/chat', '/generate_title')?.replace('/upload', '/generate_title') || 'http://127.0.0.1:8099/generate_title'
 
         const response = await fetch(pythonBackendUrl, {
             method: 'POST',

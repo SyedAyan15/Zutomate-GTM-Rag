@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         const backendFormData = new FormData()
         backendFormData.append('file', file, file.name)
 
-        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8000/upload'
+        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099/upload'
         console.log(`DEBUG: Sending file to backend (${pythonBackendUrl}) with 120s timeout`)
 
         try {

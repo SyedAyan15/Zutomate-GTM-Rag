@@ -125,7 +125,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Delete from Python backend (Pinecone)
-        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', `/files/${encodeURIComponent(filename)}`) || `http://127.0.0.1:8000/files/${encodeURIComponent(filename)}`
+        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', `/files/${encodeURIComponent(filename)}`) || `http://127.0.0.1:8099/files/${encodeURIComponent(filename)}`
 
         try {
             await fetch(pythonBackendUrl, { method: 'DELETE' })

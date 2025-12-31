@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       content: msg.content,
     }))
 
-    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', '/chat') || 'http://127.0.0.1:8000/chat'
+    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', '/chat') || 'http://127.0.0.1:8099/chat'
 
     console.log(`DEBUG: Sending to Python Backend (${pythonBackendUrl})`, { chatId, messageLength: message.length })
 
