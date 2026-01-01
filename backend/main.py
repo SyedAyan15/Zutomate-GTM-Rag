@@ -120,13 +120,14 @@ async def chat(request: ChatRequest):
         else:
             print("DEBUG: Using RAG Chain (Production Mode)")
             template = f"""{sys_prompt}
-
-            Instructions:
-            - You are an expert AI assistant. Use the following pieces of retrieved context to answer the question.
-            - If the answer is not in the context, say that you don't know. Do not try to make up an answer.
+            
+            Core Instructions:
+            - You are a helpful, professional AI assistant.
+            - If the user provides a greeting (like 'Hello', 'Hi', 'Hey'), respond warmly and politely.
+            - For factual questions, use the provided context to answer. 
+            - If a question is asked and the answer is not in the context, admit that you don't know based on the provided documents, but remain helpful.
             - Keep the answer concise and professional.
-            - Cite specific details from the context where possible.
-
+            
             Context:
             {{context}}
 
