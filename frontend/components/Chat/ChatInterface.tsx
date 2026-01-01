@@ -108,7 +108,10 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
     // Create optimistic message
     const tempId = crypto.randomUUID()
@@ -123,31 +126,6 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
 
     // Update UI immediately
     setMessages((prev) => [...prev, optimisticMessage])
-
-    // Save user message to DB
-    const { data: userMessage, error: userError } = await supabase
-      .from('messages')
-      .insert({
-        chat_id: chatId,
-        user_id: user.id,
-        content: content.trim(),
-        role: 'user',
-      } as any)
-      .select()
-      .single()
-
-    if (userError) {
-      console.error('Error saving user message:', userError)
-      // Rollback optimistic update
-      setMessages((prev) => prev.filter(m => m.id !== tempId))
-      setLoading(false)
-      return
-    }
-
-    // Replace temp ID with real ID in state (if needed, though subscription might handle it)
-    // Actually, simpler to just let subscription handle the real insert or ignore if duplicate.
-    // Ensure we update the ID so the deduper works if the subscription event comes late.
-    setMessages((prev) => prev.map(m => m.id === tempId ? userMessage : m))
 
     // Send to RAG API
     try {
@@ -176,35 +154,7 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         throw new Error(data.details || data.error || 'Failed to get response from RAG API')
       }
 
-      const assistantContent = data.response || 'Sorry, I could not process your request.'
-
-      // Create assistant message object
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        chat_id: chatId,
-        user_id: user.id,
-        content: assistantContent,
-        role: 'assistant',
-        created_at: new Date().toISOString(),
-      }
-
-      // Update UI immediately for assistant message
-      setMessages((prev) => [...prev, assistantMessage])
-
-      // Save assistant message to DB (background)
-      supabase.from('messages').insert({
-        id: assistantMessage.id, // Use same ID to prevent subscription duplicates
-        chat_id: chatId,
-        user_id: user.id,
-        content: assistantContent,
-        role: 'assistant',
-      } as any).then(({ error }) => {
-        if (error) console.error('Error saving assistant message:', error)
-      })
-
-      // Generate Title if this is the first message (or messages was empty before optimistic update)
-      // We check if messages.length is 1 (our optimistic one) or if current chat title is 'New Chat'
-      // Ideally we check chat title.
+      // Generate Title if this is the first message
       if (chat?.title === 'New Chat') {
         try {
           const titleRes = await fetch('/api/chat/title', {
@@ -215,14 +165,13 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
           const titleData = await titleRes.json()
 
           if (titleData.title) {
-            // Update title in Supabase
             const { error: titleUpdateError } = await (supabase
               .from('chats') as any)
               .update({ title: titleData.title })
               .eq('id', chatId)
 
             if (!titleUpdateError) {
-              onChatChange(chatId) // Refresh sidebar
+              onChatChange(chatId)
             }
           }
         } catch (titleErr) {
@@ -241,10 +190,8 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         created_at: new Date().toISOString(),
       }
 
-      // Show error immediately in UI
       setMessages((prev) => [...prev, errorMessage])
 
-      // Save error message to DB
       await supabase.from('messages').insert({
         id: errorMessage.id,
         chat_id: chatId,
@@ -252,9 +199,9 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         content: errorMessage.content,
         role: 'assistant',
       } as any)
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const handleNewChat = async () => {
@@ -306,4 +253,3 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     </div>
   )
 }
-

@@ -68,9 +68,10 @@ async def chat(request: ChatRequest):
         sys_prompt = system_prompt_storage.get("system_prompt", "You are a helpful AI assistant.")
         
         # --- 1. CONTEXTUALIZE QUESTION (History Awareness) ---
-        # If there is history, rephrase the question to be standalone
-        standalone_question = request.message
-        if request.history and len(request.history) > 0:
+        # Skip rephrasing for greetings or very short messages to keep it natural
+        is_greeting = len(request.message.split()) < 4
+        
+        if request.history and len(request.history) > 0 and not is_greeting:
             print("DEBUG: Rephrasing question with history...")
             
             # Format history for the prompt

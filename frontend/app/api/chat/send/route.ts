@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
       if (backendError.message.includes('fetch failed')) {
         return NextResponse.json({
-          response: "The Python RAG backend is not reachable. Please ensure the Python server is running on port 8000.",
+          response: "The Python RAG backend is not reachable. Please ensure the Python server is running on port 8099.",
         })
       }
 
