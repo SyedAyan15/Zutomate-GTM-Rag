@@ -154,42 +154,46 @@ export default function ChatSidebar({
 
   if (loading) {
     return (
-      <div className="w-64 bg-gray-100 p-4">
-        <p className="text-gray-500">Loading chats...</p>
+      <div className="w-64 bg-[#0A192F] p-4 flex items-center justify-center">
+        <div className="flex space-x-2">
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+    <div className="w-64 bg-[#0A192F] border-r border-[#112240] flex flex-col text-white">
+      <div className="p-4 border-b border-[#112240]">
         <button
           onClick={handleNewChat}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-lg hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-lg shadow-orange-500/20"
         >
           + New Chat
         </button>
         {isAdmin && (
           <div className="mt-4 space-y-2">
-            <div className="h-px bg-gray-200 my-4"></div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2">Admin Controls</p>
+            <div className="h-px bg-[#112240] my-4"></div>
+            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 mb-2">Admin Controls</p>
             <button
               onClick={() => onViewSelect?.('chat')}
-              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'chat' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'chat' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <span>💬</span> <span>Chat Logs</span>
             </button>
             <button
               onClick={() => onViewSelect?.('knowledge')}
-              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'knowledge' ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-100'
+              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'knowledge' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <span>📁</span> <span>Knowledge Base</span>
             </button>
             <button
               onClick={() => onViewSelect?.('settings')}
-              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'settings' ? 'bg-purple-50 text-purple-600' : 'text-gray-600 hover:bg-gray-100'
+              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'settings' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <span>⚙️</span> <span>System Prompt</span>
@@ -197,10 +201,10 @@ export default function ChatSidebar({
           </div>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-orange-500/20">
         {chats.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center p-4">
-            No chats yet. Create a new chat to get started!
+          <p className="text-gray-500 text-sm text-center p-4 italic">
+            No chats yet.
           </p>
         ) : (
           <div className="space-y-1">
@@ -208,14 +212,16 @@ export default function ChatSidebar({
               <div
                 key={chat.id}
                 onClick={() => onChatSelect(chat.id)}
-                className={`p-3 rounded-lg cursor-pointer hover:bg-gray-200 ${currentChatId === chat.id ? 'bg-gray-300' : ''
+                className={`p-3 rounded-lg cursor-pointer transition-all ${currentChatId === chat.id
+                  ? 'bg-orange-500/20 border-l-4 border-orange-500 text-white'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{chat.title || 'Untitled Chat'}</p>
                     {isAdmin && chat.profiles && (
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                      <p className="text-[10px] text-gray-500 truncate mt-0.5">
                         {chat.profiles.email || 'Unknown User'}
                       </p>
                     )}
@@ -223,15 +229,17 @@ export default function ChatSidebar({
                   {!isAdmin && (
                     <button
                       onClick={(e) => handleDeleteChat(chat.id, e)}
-                      className="ml-2 text-gray-500 hover:text-red-600 text-xs"
+                      className="ml-2 text-gray-500 hover:text-orange-500 transition-colors"
                     >
-                      ×
+                      <span className="text-lg">×</span>
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(chat.updated_at).toLocaleDateString()}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-[10px] text-gray-500">
+                    {new Date(chat.updated_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

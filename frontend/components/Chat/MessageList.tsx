@@ -17,39 +17,36 @@ export default function MessageList({ messages, loading }: MessageListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {messages.map((message) => (
         <div
           key={message.id}
-          className={`flex ${
-            message.role === 'user' ? 'justify-end' : 'justify-start'
-          }`}
+          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
         >
           <div
-            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-              message.role === 'user'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-800'
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
-            <p
-              className={`text-xs mt-1 ${
-                message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+            className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-sm ${message.role === 'user'
+                ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none'
+                : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
               }`}
+          >
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+            <p
+              className={`text-[10px] mt-2 opacity-60 ${message.role === 'user' ? 'text-orange-200' : 'text-gray-400'
+                }`}
             >
-              {new Date(message.created_at).toLocaleTimeString()}
+              {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
       ))}
       {loading && (
         <div className="flex justify-start">
-          <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+          <div className="bg-white border border-gray-100 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
             <div className="flex space-x-2">
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
             </div>
           </div>
         </div>

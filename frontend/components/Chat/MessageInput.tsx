@@ -31,16 +31,16 @@ export default function MessageInput({ onSendMessage, disabled }: MessageInputPr
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
+          onKeyDown={handleKeyPress}
+          placeholder="Type your message..."
           disabled={disabled}
           rows={1}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-gray-50 text-gray-900 placeholder-gray-400 resize-none shadow-sm"
         />
         <button
           type="submit"
           disabled={disabled || !message.trim()}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-[#0A192F] text-white font-bold rounded-xl hover:bg-[#112240] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
         >
           Send
         </button>
