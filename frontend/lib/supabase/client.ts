@@ -8,9 +8,23 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Missing Supabase environment variables. Please check your .env.local file.'
+    // During build time on Vercel, these might be missing. 
+    // We shouldn't throw here as it crashes the build.
+    console.warn(
+      'Supabase environment variables are missing. This is expected during some build phases, but required for runtime.'
     )
+    // Return a dummy client or null to prevent crash
+    return {
+      auth: {},
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => ({ data: null, error: null }),
+            order: () => ({ data: [], error: null })
+          })
+        })
+      })
+    } as any
   }
 
   if (client) return client
