@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
@@ -6,9 +7,16 @@ export async function GET(request: NextRequest) {
     console.log('[Admin Chats API] Request received')
 
     // Use Service Role client to bypass RLS and fetch all chats
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !serviceKey) {
+      throw new Error('Supabase configuration missing')
+    }
+
     const adminSupabase = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      supabaseUrl,
+      serviceKey
     )
 
     console.log('[Admin Chats API] Fetching all chats with user profiles...')

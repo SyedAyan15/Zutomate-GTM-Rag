@@ -9,7 +9,20 @@ export async function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return {} as any
+    return {
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => Promise.resolve({ data: null, error: null }),
+            order: () => Promise.resolve({ data: [], error: null }),
+          }),
+        }),
+      }),
+    } as any
   }
 
   return createServerClient<Database>(
@@ -41,7 +54,14 @@ export async function createAdminClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !serviceKey) {
-    return {} as any
+    return {
+      auth: {},
+      from: () => ({
+        select: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }),
+    } as any
   }
 
   return createSupabaseClient<Database>(

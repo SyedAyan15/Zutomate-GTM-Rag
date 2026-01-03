@@ -11,7 +11,7 @@ export function createClient() {
     // During build time on Vercel, these might be missing. 
     // We shouldn't throw here as it crashes the build.
     console.warn(
-      'Supabase environment variables are missing. This is expected during some build phases, but required for runtime.'
+      'Supabase environment variables are missing. BUILD_ID: 20240104_v2'
     )
     // Return a dummy client or null to prevent crash
     return {
