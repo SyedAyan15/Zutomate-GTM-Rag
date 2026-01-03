@@ -97,26 +97,24 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Zutomate</h1>
-          <div>
-            <a href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-              Login
-            </a>
-          </div>
-        </header>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-700">
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-md w-full">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Session Not Found</h2>
-            <p className="text-gray-600 mb-8">
-              We couldn't find an active login session. This might happen if your login expired or if cookies are disabled.
+      <div className="min-h-screen flex flex-col bg-[#0A192F] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] to-[#112240] opacity-90"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
+          <div className="bg-white/5 backdrop-blur-md p-10 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl">
+            <h1 className="text-4xl font-bold text-orange-500 mb-2">Zutomate</h1>
+            <div className="w-16 h-1 bg-orange-500 mx-auto mb-8 rounded-full"></div>
+
+            <h2 className="text-2xl font-bold text-white mb-4">Session Expired</h2>
+            <p className="text-gray-400 mb-8 leading-relaxed">
+              We couldn't find an active login session. Please sign in again to continue.
             </p>
             <a
               href="/login"
-              className="block w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="block w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/20 transform hover:-translate-y-1"
             >
-              Sign In Again
+              Back to Login
             </a>
           </div>
         </div>
@@ -125,29 +123,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-800">Zutomate</h1>
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded uppercase">
-            Dashboard
-          </span>
-        </div>
-        <div className="flex items-center space-x-6">
-          {isAdmin && (
-            <div className="flex items-center bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200">
-              <span className="mr-1">🛡️</span> Admin View
-            </div>
-          )}
-          <div className="h-6 w-px bg-gray-200"></div>
-          <button
-            onClick={handleLogout}
-            className="text-gray-600 hover:text-red-600 text-sm font-medium transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="h-screen flex flex-col bg-slate-50">
       <div className="flex-1 flex overflow-hidden">
         <ChatSidebar
           currentChatId={chatId}
@@ -159,6 +135,7 @@ export default function DashboardPage() {
           activeView={activeView}
           onViewSelect={setActiveView}
           onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
+          onLogout={handleLogout}
         />
         <div className="flex-1 flex flex-col overflow-hidden">
           {activeView === 'chat' && (

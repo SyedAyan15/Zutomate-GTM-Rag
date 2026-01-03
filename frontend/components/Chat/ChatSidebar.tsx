@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Chat } from '@/lib/types'
+import { LogOut } from 'lucide-react'
 
 interface ChatSidebarProps {
   currentChatId: string | null
@@ -11,6 +12,7 @@ interface ChatSidebarProps {
   activeView?: 'chat' | 'knowledge' | 'settings'
   onViewSelect?: (view: 'chat' | 'knowledge' | 'settings') => void
   onUploadSuccess?: () => void
+  onLogout?: () => void
 }
 
 export default function ChatSidebar({
@@ -20,6 +22,7 @@ export default function ChatSidebar({
   activeView = 'chat',
   onViewSelect,
   onUploadSuccess,
+  onLogout,
 }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([])
   const [loading, setLoading] = useState(true)
@@ -244,6 +247,15 @@ export default function ChatSidebar({
             ))}
           </div>
         )}
+      </div>
+      <div className="p-4 border-t border-[#112240]">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-lg transition-all font-bold text-xs uppercase tracking-widest"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   )
