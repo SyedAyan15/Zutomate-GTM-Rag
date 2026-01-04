@@ -4,11 +4,17 @@ import { cookies } from 'next/headers'
 import { Database } from '@/lib/types'
 
 export async function createClient() {
-    const cookieStore = cookies()
+    let cookieStore
+    try {
+        cookieStore = cookies()
+    } catch {
+        // Fallback for static generation / build time
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !cookieStore) {
         return {
             auth: {
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
