@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { Chat } from '@/lib/types'
+import { createClient } from '../../lib/supabase/client'
+import type { Chat } from '../../lib/types'
 import { LogOut } from 'lucide-react'
 
 interface ChatSidebarProps {

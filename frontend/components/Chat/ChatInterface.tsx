@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '../../lib/supabase/client'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import type { Chat, Message } from '@/lib/types'
@@ -86,8 +86,8 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
           table: 'messages',
           filter: `chat_id=eq.${chatId}`,
         },
-        (payload) => {
-          const newMessage = payload.new as Message
+        (payload: { new: Message }) => {
+          const newMessage = payload.new
           setMessages((prev) => {
             // Prevent duplicates if we already added it optimistically
             if (prev.some(m => m.id === newMessage.id)) {

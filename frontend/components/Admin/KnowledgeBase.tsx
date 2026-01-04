@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '../../lib/supabase/client'
 import UploadModal from '../Chat/UploadModal'
 
 interface UploadedFile {
@@ -100,46 +100,54 @@ export default function KnowledgeBase() {
     if (loading) {
         return (
             <div className="flex items-center justify-center p-8">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="p-6 bg-slate-50 min-h-full">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">System Knowledge Base</h2>
-                    <p className="text-sm text-gray-500 font-medium">Manage and monitor document indexing for RAG sessions</p>
+                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">System Knowledge Base</h2>
+                    <p className="text-sm text-gray-500 font-medium">Manage and monitor document indexing for Zutomate</p>
                 </div>
                 <div className="flex items-center space-x-3">
                     <button
                         onClick={loadFiles}
-                        className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm"
+                        className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm flex items-center"
                     >
-                        🔄 Refresh List
+                        <span className="mr-2">🔄</span> Refresh
                     </button>
                     <button
                         onClick={() => setIsUploadModalOpen(true)}
-                        className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200 active:scale-95"
+                        className="px-6 py-2.5 text-sm font-bold text-white bg-[#0A192F] hover:bg-[#112240] rounded-xl transition-all shadow-lg shadow-gray-200 active:scale-95 flex items-center"
                     >
-                        ➕ Upload New Document
+                        <span className="mr-2">➕</span> Upload Document
                     </button>
                 </div>
             </div>
 
             {error ? (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-                    <strong className="font-bold">Error:</strong> <span className="block sm:inline">{error}</span>
+                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r-xl mb-6 shadow-sm">
+                    <p className="font-bold flex items-center">
+                        <span className="mr-2">⚠️</span> Error
+                    </p>
+                    <p className="text-sm opacity-90">{error}</p>
                 </div>
             ) : files.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                    <p className="text-gray-600">No files uploaded yet</p>
-                    <p className="text-sm text-gray-500 mt-2">Upload files using the "+ Upload New Document" button above.</p>
+                <div className="text-center py-20 bg-white border border-dashed border-gray-300 rounded-2xl shadow-sm">
+                    <div className="text-4xl mb-4">📂</div>
+                    <p className="text-gray-600 font-bold text-lg">No documents found</p>
+                    <p className="text-sm text-gray-400 mt-2 max-w-xs mx-auto">Upload files to populate the knowledge base and start chatting with your data.</p>
                 </div>
             ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-100">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

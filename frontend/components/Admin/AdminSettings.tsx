@@ -17,7 +17,7 @@ export default function AdminSettings() {
             setLoading(true)
 
             // Get session token for Auth
-            const { createClient } = await import('@/lib/supabase/client')
+            const { createClient } = await import('../../lib/supabase/client')
             const supabase = createClient()
             const { data: { session } } = await supabase.auth.getSession()
             const token = session?.access_token
@@ -52,7 +52,7 @@ export default function AdminSettings() {
             setMessage(null)
 
             // Get session token for Auth
-            const { createClient } = await import('@/lib/supabase/client')
+            const { createClient } = await import('../../lib/supabase/client')
             const supabase = createClient()
             const { data: { session } } = await supabase.auth.getSession()
             const token = session?.access_token
@@ -84,67 +84,86 @@ export default function AdminSettings() {
     if (loading) {
         return (
             <div className="flex items-center justify-center p-8">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="p-6 max-w-4xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">System Settings</h2>
+        <div className="p-6 max-w-4xl bg-slate-50 min-h-full">
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">System Settings</h2>
+                <p className="text-sm text-gray-500 font-medium">Global configuration for your Zutomate AI Agent</p>
+            </div>
 
-            <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8">
                 {/* System Prompt Section */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                         System Prompt
                     </label>
-                    <p className="text-sm text-gray-500 mb-3">
-                        This prompt is applied to all chat conversations for all users. It defines the AI's behavior and personality.
+                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                        This instruction defines the core personality and behavior of the Zutomate agent. Use this to set the tone, expertise, and operational boundaries.
                     </p>
                     <textarea
                         value={systemPrompt}
                         onChange={(e) => setSystemPrompt(e.target.value)}
-                        rows={6}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter the system prompt..."
+                        rows={10}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-gray-50 text-gray-900 placeholder-gray-400 font-mono text-sm"
+                        placeholder="e.g. You are Zutomate, a specialized Go-to Market AI Assistant..."
                     />
                 </div>
 
                 {/* Model Info Section */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        AI Model
+                <div className="pt-6 border-t border-gray-100">
+                    <label className="block text-sm font-bold text-gray-700 mb-4">
+                        AI Engine Configuration
                     </label>
-                    <div className="bg-gray-50 px-4 py-3 rounded-lg">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Current Model:</span>
-                            <span className="text-sm font-semibold text-gray-900">GPT-4o</span>
+                    <div className="bg-[#0A192F]/5 px-6 py-4 rounded-xl border border-[#0A192F]/10 flex items-center justify-between">
+                        <div>
+                            <span className="text-sm font-semibold text-[#0A192F]">Current Model</span>
+                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">High-Performance LLM</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                            Using OpenAI's most advanced model for all users
-                        </p>
+                        <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-bold text-gray-900">GPT-4o</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Message Display */}
                 {message && (
-                    <div className={`p-4 rounded-lg ${message.type === 'success'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                    <div className={`p-4 rounded-xl border-l-4 font-medium text-sm transition-all ${message.type === 'success'
+                        ? 'bg-green-50 text-green-700 border-green-500'
+                        : 'bg-red-50 text-red-700 border-red-500'
                         }`}>
-                        {message.text}
+                        <div className="flex items-center">
+                            <span className="mr-2">{message.type === 'success' ? '✅' : '⚠️'}</span>
+                            {message.text}
+                        </div>
                     </div>
                 )}
 
                 {/* Save Button */}
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="px-8 py-3 bg-[#0A192F] text-white font-bold rounded-xl hover:bg-[#112240] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-gray-200 transform active:scale-95"
                     >
-                        {saving ? 'Saving...' : 'Save Changes'}
+                        {saving ? (
+                            <span className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Saving Changes...
+                            </span>
+                        ) : 'Save Changes'}
                     </button>
                 </div>
             </div>

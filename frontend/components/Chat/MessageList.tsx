@@ -1,6 +1,6 @@
 'use client'
 
-import type { Message } from '@/lib/types'
+import type { Message } from '../../lib/types'
 
 interface MessageListProps {
   messages: Message[]
@@ -26,8 +26,8 @@ export default function MessageList({ messages, loading }: MessageListProps) {
         >
           <div
             className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-sm ${message.role === 'user'
-                ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none'
-                : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
+              ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none'
+              : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
               }`}
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>

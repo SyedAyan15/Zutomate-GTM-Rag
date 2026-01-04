@@ -34,8 +34,6 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh user session – this is required for Server Actions and API routes
-  // to correctly see the session cookies.
   await supabase.auth.getUser()
 
   return supabaseResponse
