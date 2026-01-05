@@ -17,8 +17,6 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
   const [chat, setChat] = useState<Chat | null>(null)
   const supabase = createClient()
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  // Ref to track last message time to prevent race conditions
-  const lastMessageTime = useRef<number>(0)
 
   useEffect(() => {
     if (chatId) {
@@ -61,16 +59,9 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     }
   }
 
+  // Simplest working loadMessages - only APPEND new stuff, never replace
   const loadMessages = async (force = false) => {
     if (!chatId) return
-
-    // CRITICAL FIX: If we just sent a message (< 5s ago), trust local state over DB
-    // unless we are explicitly forcing a reload.
-    const timeSinceLastMessage = Date.now() - lastMessageTime.current
-    if (!force && timeSinceLastMessage < 5000) {
-      console.log('Skipping DB load - trusting local state (recent action)')
-      return
-    }
 
     const { data, error } = await supabase
       .from('messages')
@@ -78,38 +69,42 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
 
-    if (!error && data) {
-      setMessages((prev) => {
-        // ROBUST MERGE STRATEGY
-        // Source of Truth 1: 'data' (Official DB messages)
-        // Source of Truth 2: 'prev' (Local optimistic messages)
+    if (error || !data) return
 
-        const dbMessages = data;
+    setMessages((prev) => {
+      // 1. Get all IDs we currently know about (including temps)
+      const currentIds = new Set(prev.map(m => m.id))
 
-        // Find optimistic messages in local state that are NOT yet in the DB fetch
-        // We match by content/role because IDs won't match (UUID vs temp-*)
-        const pendingMessages = prev.filter(p => {
-          // Only care about keeping temp messages
-          if (!p.id.toString().startsWith('temp-')) return false;
+      // 2. Find any messages from server we don't have
+      const realNewMessages = data.filter((m: Message) => !currentIds.has(m.id))
 
-          // Check if this temp message is already represented in the DB fetch
-          const isCovered = dbMessages.some((db: Message) =>
-            db.role === p.role &&
-            db.content === p.content
-          );
+      // 3. If nothing new, DO NOT TOUCH STATE. 
+      // This protects our temp messages from being wiped by a "complete" but stale list.
+      if (realNewMessages.length === 0) return prev
 
-          // If NOT covered, we must keep it (it's still pending)
-          return !isCovered;
-        });
+      // 4. If we have new stuff, append it.
+      // We also try to replace temp messages if we find their matching pairs
+      const nextState = [...prev]
 
-        // Combine and Sort
-        const combined = [...dbMessages, ...pendingMessages].sort((a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
+      realNewMessages.forEach((newMsg: Message) => {
+        // checks if this new message matches a temp one (same role/content)
+        const tempMatchIndex = nextState.findIndex(p =>
+          p.id.toString().startsWith('temp-') &&
+          p.role === newMsg.role &&
+          p.content === newMsg.content
+        )
 
-        return combined;
+        if (tempMatchIndex !== -1) {
+          // Swap temp for real
+          nextState[tempMatchIndex] = newMsg
+        } else {
+          // Just add it
+          nextState.push(newMsg)
+        }
       })
-    }
+
+      return nextState.sort((a: Message, b: Message) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    })
   }
 
   const subscribeToMessages = () => {
@@ -157,45 +152,34 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     if (!chatId || !content.trim()) return
 
     setLoading(true)
-    lastMessageTime.current = Date.now() // LOCK SYNC
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       setLoading(false)
       return
     }
 
-    // Create optimistic message
-    const tempId = `temp-user-${crypto.randomUUID()}`
-    const optimisticMessage: Message = {
-      id: tempId,
+    // 1. SHOW USER MESSAGE IMMEDIATELY
+    const userMsg: Message = {
+      id: `temp-user-${crypto.randomUUID()}`,
       chat_id: chatId,
       user_id: user.id,
       content: content.trim(),
       role: 'user',
       created_at: new Date().toISOString(),
     }
+    setMessages(prev => [...prev, userMsg])
 
-    // Update UI immediately
-    setMessages((prev) => [...prev, optimisticMessage])
-
-    // Send to RAG API
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
 
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`
-      }
-
+      // 2. CALL API
       const response = await fetch('/api/chat/send', {
         method: 'POST',
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+        },
         body: JSON.stringify({
           message: content.trim(),
           chatId: chatId,
@@ -204,13 +188,11 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       })
 
       const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to send')
 
-      if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to get response from RAG API')
-      }
-
-      // Add assistant message directly to state for instant feedback
-      const assistantMessage: Message = {
+      // 3. SHOW ASSISTANT MESSAGE IMMEDIATELY
+      // We force this into state. We do NOT rely on a refresh.
+      const assistantMsg: Message = {
         id: `temp-assistant-${crypto.randomUUID()}`,
         chat_id: chatId,
         user_id: user.id,
@@ -219,80 +201,36 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         created_at: new Date().toISOString(),
       }
 
-      setMessages((prev) => {
-        // Double check we don't already have it
-        if (prev.some(m => m.content === data.response && m.role === 'assistant')) return prev
-        return [...prev, assistantMessage]
-      })
-      console.log('✅ Assistant message pushed to state')
+      setMessages(prev => [...prev, assistantMsg])
 
-      // 3. Failsafe re-sync after a short delay
-      setTimeout(async () => {
-        const { data: freshDocs } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', chatId)
-          .order('created_at', { ascending: true })
-
-        if (freshDocs) {
-          setMessages(prev => {
-            // Find messages from server that aren't in our current list (by ID)
-            const currentIds = new Set(prev.map((m: Message) => m.id))
-            const newFromServer = freshDocs.filter((m: Message) => !currentIds.has(m.id))
-
-            if (newFromServer.length === 0) return prev
-
-            // Replace temp messages with server ones if they match
-            return prev.map((m: Message) => {
-              if (m.id.toString().startsWith('temp-')) {
-                const match = freshDocs.find((fs: Message) => fs.role === m.role && fs.content === m.content)
-                return match || m
-              }
-              return m
-            })
-          })
-        }
-      }, 1500)
-
-      // 4. Generate Title if this is the first message
+      // 4. OPTIONAL: Trigger title generation silently
       if (chat?.title === 'New Chat') {
-        try {
-          const titleRes = await fetch('/api/chat/title', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: content.trim(), chatId }),
+        fetch('/api/chat/title', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: content.trim(), chatId }),
+        })
+          .then(res => res.json())
+          .then(d => {
+            if (d.title) {
+              supabase.from('chats').update({ title: d.title }).eq('id', chatId).then(() => {
+                onChatChange(chatId) // Just update title, don't reload messages
+              })
+            }
           })
-          const titleData = await titleRes.json()
-
-          if (titleData.title) {
-            await (supabase.from('chats') as any).update({ title: titleData.title }).eq('id', chatId)
-            onChatChange(chatId)
-          }
-        } catch (err) {
-          console.error('Title gen failed', err)
-        }
+          .catch(e => console.error(e))
       }
 
     } catch (error: any) {
-      console.error('Error calling RAG API:', error)
-      const errorMessage: Message = {
+      console.error('Chat error:', error)
+      setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         chat_id: chatId,
         user_id: user.id,
-        content: 'Sorry, there was an error processing your message. Please try again.',
+        content: 'Error: ' + error.message,
         role: 'assistant',
-        created_at: new Date().toISOString(),
-      }
-
-      setMessages((prev) => [...prev, errorMessage])
-
-      await supabase.from('messages').insert({
-        id: errorMessage.id,
-        chat_id: chatId,
-        user_id: user.id,
-        content: errorMessage.content,
-        role: 'assistant',
-      } as any)
+        created_at: new Date().toISOString()
+      }])
     } finally {
       setLoading(false)
     }
