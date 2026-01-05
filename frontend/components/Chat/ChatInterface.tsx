@@ -17,6 +17,8 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
   const [chat, setChat] = useState<Chat | null>(null)
   const supabase = createClient()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  // Ref to track last message time to prevent race conditions
+  const lastMessageTime = useRef<number>(0)
 
   useEffect(() => {
     if (chatId) {
@@ -61,6 +63,14 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
 
   const loadMessages = async (force = false) => {
     if (!chatId) return
+
+    // CRITICAL FIX: If we just sent a message (< 5s ago), trust local state over DB
+    // unless we are explicitly forcing a reload.
+    const timeSinceLastMessage = Date.now() - lastMessageTime.current
+    if (!force && timeSinceLastMessage < 5000) {
+      console.log('Skipping DB load - trusting local state (recent action)')
+      return
+    }
 
     const { data, error } = await supabase
       .from('messages')
@@ -147,6 +157,8 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     if (!chatId || !content.trim()) return
 
     setLoading(true)
+    lastMessageTime.current = Date.now() // LOCK SYNC
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
