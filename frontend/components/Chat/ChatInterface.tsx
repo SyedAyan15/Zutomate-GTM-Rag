@@ -178,12 +178,14 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         created_at: new Date().toISOString(),
       }
 
-      setMessages((prev) => {
-        // Remove the optimistic user message to replace it with the one that will come from the subscription
-        // OR just keep it and let the subscription de-dupe. 
-        // Best: Add assistant message, subscription will handle replacing temp with real.
-        return [...prev, assistantMessage]
-      })
+      setMessages((prev) => [...prev, assistantMessage])
+
+      // 2. Failsafe: Explicitly load messages from DB after a short delay
+      // This ensures we get the real IDs and timestamps even if Realtime is disabled/slow.
+      setTimeout(() => {
+        loadMessages()
+        console.log('🔄 Failsafe message sync performed')
+      }, 1000)
 
       // Generate Title if this is the first message
       if (chat?.title === 'New Chat') {
@@ -203,6 +205,8 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
 
             if (!titleUpdateError) {
               onChatChange(chatId)
+              // Refresh again after title change, just in case
+              loadMessages()
             }
           }
         } catch (titleErr) {
