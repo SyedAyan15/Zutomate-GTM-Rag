@@ -188,22 +188,39 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       })
 
       const data = await response.json()
+      console.log('DEBUG: API Response', data)
       if (!response.ok) throw new Error(data.error || 'Failed to send')
 
       // 3. SHOW ASSISTANT MESSAGE IMMEDIATELY
-      // We force this into state. We do NOT rely on a refresh.
+      // Use fallback fields if response format varies
+      const assistantContent = data.response || data.answer || data.message || ''
+
+      if (!assistantContent) {
+        console.warn('DEBUG: No content found in response', data)
+        return // Don't add empty message
+      }
+
       const assistantMsg: Message = {
         id: `temp-assistant-${crypto.randomUUID()}`,
         chat_id: chatId,
         user_id: user.id,
-        content: data.response,
+        content: assistantContent,
         role: 'assistant',
         created_at: new Date().toISOString(),
       }
 
-      setMessages(prev => [...prev, assistantMsg])
+      // Remove any existing temp assistant messages before adding new one
+      setMessages(prev => {
+        const filtered = prev.filter(m => !m.id.startsWith('temp-assistant-'))
+        const updated = [...filtered, assistantMsg]
+        console.log('Assistant message added:', assistantMsg)
+        return updated
+      })
 
-      // 4. OPTIONAL: Trigger title generation silently
+      setTimeout(scrollToBottom, 0)
+
+      loadMessages(true)
+
       if (chat?.title === 'New Chat') {
         fetch('/api/chat/title', {
           method: 'POST',
