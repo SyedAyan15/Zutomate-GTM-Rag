@@ -89,10 +89,24 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         (payload: { new: Message }) => {
           const newMessage = payload.new
           setMessages((prev) => {
-            // Prevent duplicates if we already added it optimistically
-            if (prev.some(m => m.id === newMessage.id)) {
-              return prev
+            // 1. Check if ID already exists
+            if (prev.some(m => m.id === newMessage.id)) return prev
+
+            // 2. Check for matching content/role (optimistic peer)
+            // If we find a message with same role and content created very recently, 
+            // it's probably our optimistic UI message being "confirmed" by the DB.
+            const duplicateIndex = prev.findIndex(m =>
+              m.role === newMessage.role &&
+              m.content === newMessage.content &&
+              m.id.startsWith('temp-')
+            )
+
+            if (duplicateIndex !== -1) {
+              const newMessages = [...prev]
+              newMessages[duplicateIndex] = newMessage
+              return newMessages
             }
+
             return [...prev, newMessage]
           })
         }
@@ -114,7 +128,7 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     }
 
     // Create optimistic message
-    const tempId = crypto.randomUUID()
+    const tempId = `temp-user-${crypto.randomUUID()}`
     const optimisticMessage: Message = {
       id: tempId,
       chat_id: chatId,
@@ -153,6 +167,23 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       if (!response.ok) {
         throw new Error(data.details || data.error || 'Failed to get response from RAG API')
       }
+
+      // Add assistant message directly to state for instant feedback
+      const assistantMessage: Message = {
+        id: `temp-assistant-${crypto.randomUUID()}`,
+        chat_id: chatId,
+        user_id: user.id,
+        content: data.response,
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      }
+
+      setMessages((prev) => {
+        // Remove the optimistic user message to replace it with the one that will come from the subscription
+        // OR just keep it and let the subscription de-dupe. 
+        // Best: Add assistant message, subscription will handle replacing temp with real.
+        return [...prev, assistantMessage]
+      })
 
       // Generate Title if this is the first message
       if (chat?.title === 'New Chat') {
