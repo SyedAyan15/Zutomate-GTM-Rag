@@ -70,23 +70,34 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
 
     if (!error && data) {
       setMessages((prev) => {
-        // If the server returns fewer messages than we have and we're not forcing,
-        // it's likely a race condition where we've added messages the server hasn't committed yet.
-        if (!force && data.length < prev.length) {
-          // Merge logic: Add anything from server we don't have, keep our temp ones
-          const serverIds = new Set(data.map((m: Message) => m.id))
-          const existingTemp = prev.filter(m => m.id.toString().startsWith('temp-') && !serverIds.has(m.id))
+        // ROBUST MERGE STRATEGY
+        // Source of Truth 1: 'data' (Official DB messages)
+        // Source of Truth 2: 'prev' (Local optimistic messages)
 
-          // Check if any temp messages match server messages (by content/role) to avoid duplicates
-          const uniqueTemp = existingTemp.filter(temp =>
-            !data.some((srv: Message) => srv.role === temp.role && srv.content === temp.content)
-          )
+        const dbMessages = data;
 
-          return [...data, ...uniqueTemp].sort((a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          )
-        }
-        return data
+        // Find optimistic messages in local state that are NOT yet in the DB fetch
+        // We match by content/role because IDs won't match (UUID vs temp-*)
+        const pendingMessages = prev.filter(p => {
+          // Only care about keeping temp messages
+          if (!p.id.toString().startsWith('temp-')) return false;
+
+          // Check if this temp message is already represented in the DB fetch
+          const isCovered = dbMessages.some((db: Message) =>
+            db.role === p.role &&
+            db.content === p.content
+          );
+
+          // If NOT covered, we must keep it (it's still pending)
+          return !isCovered;
+        });
+
+        // Combine and Sort
+        const combined = [...dbMessages, ...pendingMessages].sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+        return combined;
       })
     }
   }
