@@ -31,7 +31,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
         }
 
         setUploading(true)
-        setMessage(null) // Clear any previous messages
+        setMessage(null)
 
         try {
             const { data: { session } } = await supabase.auth.getSession()
@@ -43,9 +43,9 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
             const formData = new FormData()
             formData.append('file', file)
 
-            // --- TIMEOUT PROTECTION ---
+            // --- TIMEOUT PROTECTION (Increased to 5 minutes for RAG indexing) ---
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 300000)
 
             const response = await fetch('/api/upload', {
                 method: 'POST',
@@ -61,7 +61,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
             if (data.warning) {
                 setMessage({ type: 'error', text: `Warning: ${data.warning} (${data.db_error || 'Database error'})` })
                 if (onSuccess) onSuccess()
-                return // Leave modal open so they can see the warning
+                return
             }
 
             if (!response.ok) {
@@ -73,63 +73,100 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
 
             setTimeout(() => {
                 onClose()
-                setMessage(null) // Clear success message after closing
-                setFile(null) // Reset file input
-            }, 2000) // Close modal and reset after 2 seconds
+                setMessage(null)
+                setFile(null)
+            }, 2000)
         } catch (error: any) {
             console.error('Upload error:', error)
-            setMessage({ type: 'error', text: error.message || 'The upload is taking too long or the server is offline. Please refresh and try again.' })
+            const isAbort = error.name === 'AbortError'
+            setMessage({
+                type: 'error',
+                text: isAbort
+                    ? 'The upload and indexing process timed out (5m). The file might still be processing on the server, please check the list in a moment.'
+                    : (error.message || 'An unexpected error occurred during upload.')
+            })
         } finally {
             setUploading(false)
         }
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-                <h2 className="text-xl font-bold mb-4">Upload Knowledge Base</h2>
-
-                <p className="text-sm text-gray-600 mb-4">
-                    Upload PDF or Text files to train the chatbot.
-                </p>
-
-                <div className="mb-4">
-                    <input
-                        type="file"
-                        accept=".pdf,.txt"
-                        onChange={handleFileChange}
-                        className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
-                    />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all border border-gray-100">
+                {/* Header */}
+                <div className="bg-[#0A192F] px-8 py-6 relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">Upload Knowledge</h2>
+                    <p className="text-sm text-gray-400 mt-1">Enhance Zutomate with your documents</p>
                 </div>
 
-                {message && (
-                    <div className={`mb-4 p-2 text-sm rounded ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
+                <div className="p-8">
+                    <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                        Upload your business documents (PDF or Text). Zutomate will index them to provide specialized GTM insights.
+                    </p>
 
-                <div className="flex justify-end gap-2">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-                        disabled={uploading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleUpload}
-                        disabled={!file || uploading}
-                        className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 
-              ${(!file || uploading) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        {uploading ? 'Uploading...' : 'Upload'}
-                    </button>
+                    <div className="mb-6">
+                        <label className="block w-full cursor-pointer group">
+                            <div className={`border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center space-y-3 ${file ? 'border-orange-500 bg-orange-50/30' : 'border-gray-200 hover:border-orange-400 hover:bg-gray-50'
+                                }`}>
+                                <div className={`text-3xl transition-transform group-hover:scale-110 ${file ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    {file ? '📄' : '📤'}
+                                </div>
+                                <span className={`text-sm font-bold ${file ? 'text-orange-700' : 'text-gray-500'}`}>
+                                    {file ? file.name : 'Select PDF or Text File'}
+                                </span>
+                                {file && (
+                                    <span className="text-[10px] text-orange-400 uppercase font-black tracking-widest">
+                                        {(file.size / 1024).toFixed(1)} KB
+                                    </span>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                accept=".pdf,.txt"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+                        </label>
+                    </div>
+
+                    {message && (
+                        <div className={`mb-6 p-4 rounded-xl border-l-4 font-medium text-xs transition-all animate-in fade-in slide-in-from-top-2 ${message.type === 'success'
+                                ? 'bg-green-50 text-green-700 border-green-500'
+                                : 'bg-red-50 text-red-700 border-red-500'
+                            }`}>
+                            <div className="flex items-start">
+                                <span className="mr-2 mt-0.5">{message.type === 'success' ? '✅' : '⚠️'}</span>
+                                <span className="flex-1">{message.text}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-3 text-gray-500 font-bold text-sm hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+                            disabled={uploading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleUpload}
+                            disabled={!file || uploading}
+                            className={`flex-[2] py-3 px-4 bg-[#0A192F] text-white font-bold rounded-xl transition-all shadow-lg shadow-gray-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${!file ? '' : 'hover:bg-[#112240]'
+                                }`}
+                        >
+                            {uploading ? (
+                                <span className="flex items-center">
+                                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Indexing...
+                                </span>
+                            ) : 'Start Indexing'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

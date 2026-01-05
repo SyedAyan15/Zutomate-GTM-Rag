@@ -136,15 +136,16 @@ export async function DELETE(request: NextRequest) {
             // Continue even if backend fails
         }
 
-        // Delete from database
-        const { error: dbError } = await (supabase as any)
+        // Delete from database using Admin Client to bypass RLS
+        const adminSupabase = await createAdminClient()
+        const { error: dbError } = await (adminSupabase as any)
             .from('uploaded_files')
             .delete()
             .eq('id', fileId)
 
         if (dbError) {
             console.error('Database deletion error:', dbError)
-            return NextResponse.json({ error: 'Failed to delete file from database' }, { status: 500 })
+            return NextResponse.json({ error: 'Failed to delete file from database', details: dbError.message }, { status: 500 })
         }
 
         return NextResponse.json({ message: 'File deleted successfully' })

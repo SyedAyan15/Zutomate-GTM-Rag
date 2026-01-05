@@ -127,9 +127,9 @@ export async function POST(request: NextRequest) {
         console.log(`DEBUG: Sending file to backend (${pythonBackendUrl}) with 120s timeout`)
 
         try {
-            // Create a controller to handle the long timeout
+            // Create a controller to handle the long timeout (300 seconds)
             const controller = new AbortController()
-            const id = setTimeout(() => controller.abort(), 120000) // 120 seconds
+            const id = setTimeout(() => controller.abort(), 300000)
 
             const response = await fetch(pythonBackendUrl, {
                 method: 'POST',
