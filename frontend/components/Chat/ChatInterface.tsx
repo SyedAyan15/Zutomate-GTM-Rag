@@ -59,7 +59,7 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     }
   }
 
-  const loadMessages = async () => {
+  const loadMessages = async (force = false) => {
     if (!chatId) return
 
     const { data, error } = await supabase
@@ -69,7 +69,25 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       .order('created_at', { ascending: true })
 
     if (!error && data) {
-      setMessages(data)
+      setMessages((prev) => {
+        // If the server returns fewer messages than we have and we're not forcing,
+        // it's likely a race condition where we've added messages the server hasn't committed yet.
+        if (!force && data.length < prev.length) {
+          // Merge logic: Add anything from server we don't have, keep our temp ones
+          const serverIds = new Set(data.map((m: Message) => m.id))
+          const existingTemp = prev.filter(m => m.id.toString().startsWith('temp-') && !serverIds.has(m.id))
+
+          // Check if any temp messages match server messages (by content/role) to avoid duplicates
+          const uniqueTemp = existingTemp.filter(temp =>
+            !data.some((srv: Message) => srv.role === temp.role && srv.content === temp.content)
+          )
+
+          return [...data, ...uniqueTemp].sort((a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          )
+        }
+        return data
+      })
     }
   }
 
@@ -178,16 +196,42 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
         created_at: new Date().toISOString(),
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => {
+        // Double check we don't already have it
+        if (prev.some(m => m.content === data.response && m.role === 'assistant')) return prev
+        return [...prev, assistantMessage]
+      })
+      console.log('✅ Assistant message pushed to state')
 
-      // 2. Failsafe: Explicitly load messages from DB after a short delay
-      // This ensures we get the real IDs and timestamps even if Realtime is disabled/slow.
-      setTimeout(() => {
-        loadMessages()
-        console.log('🔄 Failsafe message sync performed')
-      }, 1000)
+      // 3. Failsafe re-sync after a short delay
+      setTimeout(async () => {
+        const { data: freshDocs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', chatId)
+          .order('created_at', { ascending: true })
 
-      // Generate Title if this is the first message
+        if (freshDocs) {
+          setMessages(prev => {
+            // Find messages from server that aren't in our current list (by ID)
+            const currentIds = new Set(prev.map((m: Message) => m.id))
+            const newFromServer = freshDocs.filter((m: Message) => !currentIds.has(m.id))
+
+            if (newFromServer.length === 0) return prev
+
+            // Replace temp messages with server ones if they match
+            return prev.map((m: Message) => {
+              if (m.id.toString().startsWith('temp-')) {
+                const match = freshDocs.find((fs: Message) => fs.role === m.role && fs.content === m.content)
+                return match || m
+              }
+              return m
+            })
+          })
+        }
+      }, 1500)
+
+      // 4. Generate Title if this is the first message
       if (chat?.title === 'New Chat') {
         try {
           const titleRes = await fetch('/api/chat/title', {
@@ -198,19 +242,11 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
           const titleData = await titleRes.json()
 
           if (titleData.title) {
-            const { error: titleUpdateError } = await (supabase
-              .from('chats') as any)
-              .update({ title: titleData.title })
-              .eq('id', chatId)
-
-            if (!titleUpdateError) {
-              onChatChange(chatId)
-              // Refresh again after title change, just in case
-              loadMessages()
-            }
+            await (supabase.from('chats') as any).update({ title: titleData.title }).eq('id', chatId)
+            onChatChange(chatId)
           }
-        } catch (titleErr) {
-          console.error('Title gen error:', titleErr)
+        } catch (err) {
+          console.error('Title gen failed', err)
         }
       }
 
