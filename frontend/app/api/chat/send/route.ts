@@ -2,12 +2,30 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '../../../../lib/supabase/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { Database } from '../../../../lib/types'
 
 export async function POST(request: NextRequest) {
   try {
     const headers = Object.fromEntries(request.headers.entries())
-    const supabase = await createClient()
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    const supabase = createServerClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+            // In a Route Handler, we can't easily set cookies on the request.
+          }
+        }
+      }
+    )
 
     // Try both getUser (secure) and getSession (lenient)
     let { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -45,7 +63,7 @@ export async function POST(request: NextRequest) {
       .select('role, content')
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
-      .limit(10)
+      .order('created_at', { ascending: true })
 
     const conversationHistory = (messages || []).map((msg: any) => ({
       role: msg.role,

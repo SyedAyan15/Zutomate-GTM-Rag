@@ -88,7 +88,10 @@ export default function ChatSidebar({
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) return
+    if (!user && !isAdmin) return
+
+    // Admin listens to ALL chats, User listens to OWN chats
+    const filterConfig = isAdmin ? {} : { filter: `user_id=eq.${user?.id}` }
 
     const channel = supabase
       .channel('chats')
@@ -98,13 +101,18 @@ export default function ChatSidebar({
           event: '*',
           schema: 'public',
           table: 'chats',
-          filter: isAdmin ? undefined : `user_id=eq.${user.id}`,
+          ...filterConfig,
         },
         () => {
+          console.log('[Sidebar] Chats updated, reloading...')
           loadChats()
         }
       )
       .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }
 
   const handleNewChat = async () => {
@@ -214,7 +222,11 @@ export default function ChatSidebar({
             {chats.map((chat: any) => (
               <div
                 key={chat.id}
-                onClick={() => onChatSelect(chat.id)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  console.log('[Sidebar] Selected chat:', chat.id)
+                  onChatSelect(chat.id)
+                }}
                 className={`p-3 rounded-lg cursor-pointer transition-all ${currentChatId === chat.id
                   ? 'bg-orange-500/20 border-l-4 border-orange-500 text-white'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'

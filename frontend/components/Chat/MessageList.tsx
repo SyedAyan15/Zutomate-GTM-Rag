@@ -34,21 +34,24 @@ export default function MessageList({ messages, loading }: MessageListProps) {
                 : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
             )}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+            <div
               className={cn(
                 "prose text-sm leading-relaxed whitespace-pre-wrap break-words",
                 message.role === 'user'
                   ? "prose-invert prose-p:text-white prose-a:text-orange-300 prose-headings:text-white prose-strong:text-orange-200"
                   : "prose-headings:text-[#0A192F] prose-a:text-orange-600 prose-strong:text-[#0A192F]"
               )}
-              components={{
-                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition-opacity">{children}</a>
-              }}
             >
-              {message.content}
-            </ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition-opacity">{children}</a>
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
             <p
               className={cn(
                 "text-[10px] mt-2 opacity-60",

@@ -20,26 +20,28 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
 
   useEffect(() => {
     if (chatId) {
-      loadChat()
-      loadMessages()
-      subscribeToMessages()
+      // 1. Immediate reset to prevent "stuck" view of old chat
+      setMessages([])
+      setChat(null)
+      setLoading(true)
+
+      // 2. Load new data
+      Promise.all([loadChat(), loadMessages()])
+        .finally(() => setLoading(false))
+
+      const channel = subscribeToMessages()
+
+      return () => {
+        if (channel) supabase.removeChannel(channel)
+      }
     } else {
       setMessages([])
       setChat(null)
     }
-
-    return () => {
-      if (chatId) {
-        supabase
-          .channel(`messages:${chatId}`)
-          .unsubscribe()
-      }
-    }
   }, [chatId])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+  // Removed separate scrollToBottom effect to avoid fighting with scroll position during load
+  // Added specific scroll behavior in loadMessages instead
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -59,7 +61,6 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     }
   }
 
-  // Simplest working loadMessages - only APPEND new stuff, never replace
   const loadMessages = async (force = false) => {
     if (!chatId) return
 
@@ -72,43 +73,35 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
     if (error || !data) return
 
     setMessages((prev) => {
-      // 1. Get all IDs we currently know about (including temps)
-      const currentIds = new Set(prev.map(m => m.id))
+      // Start with the authoritative server data
+      const nextState: Message[] = [...data]
 
-      // 2. Find any messages from server we don't have
-      const realNewMessages = data.filter((m: Message) => !currentIds.has(m.id))
+      // OPTIMIZATION: merge valid local temp messages that haven't synced yet
+      if (prev.length > 0) {
+        prev.forEach(oldMsg => {
+          if (!oldMsg.id.toString().startsWith('temp-')) return
 
-      // 3. If nothing new, DO NOT TOUCH STATE. 
-      // This protects our temp messages from being wiped by a "complete" but stale list.
-      if (realNewMessages.length === 0) return prev
+          // Check if matches a new real message
+          const hasRealCounterpart = nextState.some(newMsg =>
+            newMsg.role === oldMsg.role &&
+            newMsg.content === oldMsg.content
+          )
 
-      // 4. If we have new stuff, append it.
-      // We also try to replace temp messages if we find their matching pairs
-      const nextState = [...prev]
+          if (!hasRealCounterpart) {
+            nextState.push(oldMsg)
+          }
+        })
+      }
 
-      realNewMessages.forEach((newMsg: Message) => {
-        // checks if this new message matches a temp one (same role/content)
-        const tempMatchIndex = nextState.findIndex(p =>
-          p.id.toString().startsWith('temp-') &&
-          p.role === newMsg.role &&
-          p.content === newMsg.content
-        )
-
-        if (tempMatchIndex !== -1) {
-          // Swap temp for real
-          nextState[tempMatchIndex] = newMsg
-        } else {
-          // Just add it
-          nextState.push(newMsg)
-        }
-      })
-
-      return nextState.sort((a: Message, b: Message) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      return nextState.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     })
+
+    // Scroll to bottom after loading messages
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 100)
   }
 
   const subscribeToMessages = () => {
-    if (!chatId) return
+    if (!chatId) return null
 
     const channel = supabase
       .channel(`messages:${chatId}`)
@@ -127,8 +120,6 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
             if (prev.some(m => m.id === newMessage.id)) return prev
 
             // 2. Check for matching content/role (optimistic peer)
-            // If we find a message with same role and content created very recently, 
-            // it's probably our optimistic UI message being "confirmed" by the DB.
             const duplicateIndex = prev.findIndex(m =>
               m.role === newMessage.role &&
               m.content === newMessage.content &&
@@ -141,11 +132,22 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
               return newMessages
             }
 
+            // Double check content uniqueness to avoid "double vision" if ID differs
+            const contentExists = prev.some(m =>
+              m.content === newMessage.content &&
+              m.role === newMessage.role
+            )
+            if (contentExists) return prev
+
             return [...prev, newMessage]
           })
+          // Scroll on new message
+          setTimeout(scrollToBottom, 100)
         }
       )
       .subscribe()
+
+    return channel
   }
 
   const handleSendMessage = async (content: string) => {
@@ -230,8 +232,11 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
           .then(res => res.json())
           .then(d => {
             if (d.title) {
+              // Update LOCAL chat state to prevent re-triggering this block
+              setChat(prev => prev ? ({ ...prev, title: d.title }) : prev)
+
               supabase.from('chats').update({ title: d.title }).eq('id', chatId).then(() => {
-                onChatChange(chatId) // Just update title, don't reload messages
+                onChatChange(chatId) // Just update title in sidebar
               })
             }
           })

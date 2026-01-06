@@ -1,16 +1,30 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '../../../../lib/supabase/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { Database } from '../../../../lib/types'
 
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient()
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-        // If supabase client is missing auth (build time)
-        if (!supabase.auth) {
-            return NextResponse.json({ messages: [] })
-        }
+        const supabase = createServerClient<Database>(
+            supabaseUrl,
+            supabaseAnonKey,
+            {
+                cookies: {
+                    getAll() {
+                        return request.cookies.getAll()
+                    },
+                    setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+                        // In a Route Handler, we can't easily set cookies on the request.
+                        // Session refresh should generally happen in Middleware.
+                        // We leave this empty to prevent errors if Supabase tries to set cookies.
+                    }
+                }
+            }
+        )
 
         const {
             data: { user },
