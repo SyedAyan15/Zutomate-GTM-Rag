@@ -1,15 +1,14 @@
 'use client'
 
 import type { Message } from '../../lib/types'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { cn } from '../../lib/utils'
 
 interface MessageListProps {
   messages: Message[]
   loading: boolean
 }
-
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { cn } from '../../lib/utils'
 
 export default function MessageList({ messages, loading }: MessageListProps) {
   if (messages.length === 0 && !loading) {
