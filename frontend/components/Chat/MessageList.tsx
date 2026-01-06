@@ -7,6 +7,10 @@ interface MessageListProps {
   loading: boolean
 }
 
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { cn } from '../../lib/utils'
+
 export default function MessageList({ messages, loading }: MessageListProps) {
   if (messages.length === 0 && !loading) {
     return (
@@ -21,19 +25,36 @@ export default function MessageList({ messages, loading }: MessageListProps) {
       {messages.map((message) => (
         <div
           key={message.id}
-          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-sm ${message.role === 'user'
-              ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none'
-              : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
-              }`}
+            className={cn(
+              "max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-sm",
+              message.role === 'user'
+                ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none'
+                : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
+            )}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              className={cn(
+                "prose text-sm leading-relaxed whitespace-pre-wrap break-words",
+                message.role === 'user'
+                  ? "prose-invert prose-p:text-white prose-a:text-orange-300 prose-headings:text-white prose-strong:text-orange-200"
+                  : "prose-headings:text-[#0A192F] prose-a:text-orange-600 prose-strong:text-[#0A192F]"
+              )}
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition-opacity">{children}</a>
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
             <p
-              className={`text-[10px] mt-2 opacity-60 ${message.role === 'user' ? 'text-orange-200' : 'text-gray-400'
-                }`}
+              className={cn(
+                "text-[10px] mt-2 opacity-60",
+                message.role === 'user' ? 'text-orange-200' : 'text-gray-400'
+              )}
             >
               {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
