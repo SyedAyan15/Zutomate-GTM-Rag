@@ -9,9 +9,10 @@ import type { Chat, Message } from '@/lib/types'
 interface ChatInterfaceProps {
   chatId: string | null
   onChatChange: (chatId: string | null) => void
+  isAdmin?: boolean
 }
 
-export default function ChatInterface({ chatId, onChatChange }: ChatInterfaceProps) {
+export default function ChatInterface({ chatId, onChatChange, isAdmin = false }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [chat, setChat] = useState<Chat | null>(null)
@@ -29,7 +30,10 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       Promise.all([loadChat(), loadMessages()])
         .finally(() => setLoading(false))
 
-      const channel = subscribeToMessages()
+      let channel: any = null
+      if (!isAdmin) {
+        channel = subscribeToMessages()
+      }
 
       return () => {
         if (channel) supabase.removeChannel(channel)
@@ -38,7 +42,7 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
       setMessages([])
       setChat(null)
     }
-  }, [chatId])
+  }, [chatId, isAdmin])
 
   // Removed separate scrollToBottom effect to avoid fighting with scroll position during load
   // Added specific scroll behavior in loadMessages instead
@@ -64,11 +68,35 @@ export default function ChatInterface({ chatId, onChatChange }: ChatInterfacePro
   const loadMessages = async (force = false) => {
     if (!chatId) return
 
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('chat_id', chatId)
-      .order('created_at', { ascending: true })
+    let data: Message[] | null = null
+    let error: any = null
+
+    if (isAdmin) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(`/api/admin/messages?chatId=${chatId}`, {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`
+          }
+        })
+        if (res.ok) {
+          const json = await res.json()
+          data = json.messages
+        } else {
+          console.error('Admin Fetch Error:', await res.json())
+        }
+      } catch (e) {
+        console.error('Admin Fetch Exception:', e)
+      }
+    } else {
+      const result = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true })
+      data = result.data
+      error = result.error
+    }
 
     if (error || !data) return
 

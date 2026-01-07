@@ -57,7 +57,15 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        const { data: messages, error: messagesError } = await supabase
+        // Use Service Role to bypass RLS for fetching messages of other users
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+        const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+        const adminSupabase = createServiceClient<Database>(
+            supabaseUrl,
+            serviceKey
+        )
+
+        const { data: messages, error: messagesError } = await adminSupabase
             .from('messages')
             .select(`
         *,

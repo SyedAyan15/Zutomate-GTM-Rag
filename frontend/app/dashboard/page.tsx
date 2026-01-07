@@ -139,7 +139,7 @@ export default function DashboardPage() {
         />
         <div className="flex-1 flex flex-col overflow-hidden">
           {activeView === 'chat' && (
-            <ChatInterface key={chatId} chatId={chatId} onChatChange={setChatId} />
+            <ChatInterface key={chatId} chatId={chatId} onChatChange={setChatId} isAdmin={isAdmin} />
           )}
           {activeView === 'knowledge' && (
             <div className="flex-1 overflow-y-auto bg-white">
