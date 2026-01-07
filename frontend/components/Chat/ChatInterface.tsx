@@ -249,7 +249,8 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
 
       setTimeout(scrollToBottom, 0)
 
-      loadMessages(true)
+      // Remove manual reload to prevent race condition with Realtime subscription
+      // loadMessages(true)
 
       if (chat?.title === 'New Chat') {
         fetch('/api/chat/title', {
