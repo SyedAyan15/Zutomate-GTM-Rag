@@ -54,7 +54,11 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch system prompt from Python backend
-        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', '/settings/system-prompt') || 'http://127.0.0.1:8099/settings/system-prompt'
+        let baseUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099'
+        baseUrl = baseUrl.replace(/\/upload$/, '')
+        const pythonBackendUrl = baseUrl.endsWith('/settings/system-prompt')
+            ? baseUrl
+            : `${baseUrl}/settings/system-prompt`
 
         try {
             const response = await fetch(pythonBackendUrl)
@@ -131,7 +135,11 @@ export async function PUT(request: NextRequest) {
         }
 
         // Update in Python backend
-        const pythonBackendUrl = process.env.PYTHON_BACKEND_URL?.replace('/upload', '/settings/system-prompt') || 'http://127.0.0.1:8099/settings/system-prompt'
+        let baseUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099'
+        baseUrl = baseUrl.replace(/\/upload$/, '')
+        const pythonBackendUrl = baseUrl.endsWith('/settings/system-prompt')
+            ? baseUrl
+            : `${baseUrl}/settings/system-prompt`
 
         try {
             const response = await fetch(pythonBackendUrl, {

@@ -66,8 +66,9 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     print(f"DEBUG: Processing message: {request.message[:50]}...")
     try:
-        # Get system prompt
-        sys_prompt = system_prompt_storage.get("system_prompt", "You are a helpful AI assistant.")
+        # Load the most recent prompt (checks local file -> Supabase -> Default)
+        sys_prompt = load_system_prompt()
+        print(f"DEBUG: Using system prompt ({len(sys_prompt)} chars)")
         
         # --- 1. CONTEXTUALIZE QUESTION (History Awareness) ---
         # Skip rephrasing for greetings or very short messages to keep it natural
@@ -382,8 +383,8 @@ async def update_system_prompt(prompt: dict):
         
         # Persist to file
         try:
-            with open(SYSTEM_PROMPT_FILE, "w") as f:
-                json.dump({"system_prompt": new_prompt}, f)
+            with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
+                json.dump({"system_prompt": new_prompt}, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f" Error saving system prompt to file: {e}")
 
