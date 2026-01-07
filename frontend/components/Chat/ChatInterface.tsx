@@ -240,12 +240,7 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
       }
 
       // Remove any existing temp assistant messages before adding new one
-      setMessages(prev => {
-        const filtered = prev.filter(m => !m.id.startsWith('temp-assistant-'))
-        const updated = [...filtered, assistantMsg]
-        console.log('Assistant message added:', assistantMsg)
-        return updated
-      })
+      setMessages(prev => [...prev, assistantMsg])
 
       setTimeout(scrollToBottom, 0)
 

@@ -63,7 +63,21 @@ export async function POST(request: NextRequest) {
       .select('role, content')
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
-      .order('created_at', { ascending: true })
+    // 1. PERSIST USER MESSAGE IMMEDIATELY
+    // This ensures the question is saved even if the AI backend fails or times out
+    try {
+      const supabaseAny = supabase as any
+      await supabaseAny.from('messages').insert({
+        chat_id: chatId,
+        role: 'user',
+        content: message,
+        user_id: activeUser.id
+      })
+      console.log('✅ User message persisted')
+    } catch (dbError) {
+      console.error('❌ User message persistence error:', dbError)
+      // We continue anyway so the user might still get an answer even if save failed
+    }
 
     const conversationHistory = (messages || []).map((msg: any) => ({
       role: msg.role,
@@ -96,19 +110,10 @@ export async function POST(request: NextRequest) {
       const backendResponse = data.response || data.message || 'I processed your request.'
       const responseText = typeof backendResponse === 'string' ? backendResponse : JSON.stringify(backendResponse)
 
-      // --- PERSIST MESSAGES TO DATABASE ---
-      console.log('💾 Saving message pair to database...')
+      // 2. PERSIST ASSISTANT RESPONSE
+      console.log('💾 Saving assistant response to database...')
       try {
         const supabaseAny = supabase as any
-        // 1. Save user message
-        await supabaseAny.from('messages').insert({
-          chat_id: chatId,
-          role: 'user',
-          content: message,
-          user_id: activeUser.id
-        })
-
-        // 2. Save assistant response
         await supabaseAny.from('messages').insert({
           chat_id: chatId,
           role: 'assistant',
@@ -118,9 +123,9 @@ export async function POST(request: NextRequest) {
 
         // 3. Update chat timestamp
         await supabaseAny.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId)
-        console.log('✅ Messages persisted successfully')
+        console.log('✅ Assistant response persisted successfully')
       } catch (dbError) {
-        console.error('❌ Database persistence error:', dbError)
+        console.error('❌ Assistant persistence error:', dbError)
       }
 
       return NextResponse.json({
