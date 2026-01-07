@@ -2,6 +2,14 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '../../../lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+const getAdminClient = () => {
+    return createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+}
 
 // GET: Fetch system settings
 export async function GET(request: NextRequest) {
@@ -16,8 +24,7 @@ export async function GET(request: NextRequest) {
             const authHeader = request.headers.get('Authorization')
             if (authHeader) {
                 const token = authHeader.split(' ')[1]
-                const { createClient: createDirectClient } = require('@supabase/supabase-js')
-                const directClient = createDirectClient(
+                const directClient = createSupabaseClient(
                     process.env.NEXT_PUBLIC_SUPABASE_URL!,
                     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
                     { global: { headers: { Authorization: `Bearer ${token}` } } }
@@ -25,7 +32,6 @@ export async function GET(request: NextRequest) {
                 const { data: directUser } = await directClient.auth.getUser()
                 if (directUser.user) {
                     user = directUser.user
-                    supabase = directClient
                 }
             }
         }
@@ -34,7 +40,10 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { data: profile } = await supabase
+        // Use Admin Client for DB operations to bypass RLS
+        const adminSupabase = getAdminClient()
+
+        const { data: profile } = await adminSupabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
@@ -85,8 +94,7 @@ export async function PUT(request: NextRequest) {
             const authHeader = request.headers.get('Authorization')
             if (authHeader) {
                 const token = authHeader.split(' ')[1]
-                const { createClient: createDirectClient } = require('@supabase/supabase-js')
-                const directClient = createDirectClient(
+                const directClient = createSupabaseClient(
                     process.env.NEXT_PUBLIC_SUPABASE_URL!,
                     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
                     { global: { headers: { Authorization: `Bearer ${token}` } } }
@@ -94,7 +102,6 @@ export async function PUT(request: NextRequest) {
                 const { data: directUser } = await directClient.auth.getUser()
                 if (directUser.user) {
                     user = directUser.user
-                    supabase = directClient
                 }
             }
         }
@@ -103,7 +110,10 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { data: profile } = await supabase
+        // Use Admin Client for DB operations to bypass RLS
+        const adminSupabase = getAdminClient()
+
+        const { data: profile } = await adminSupabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
@@ -136,8 +146,8 @@ export async function PUT(request: NextRequest) {
 
             const data = await response.json()
 
-            // Also update in Supabase for persistence
-            await (supabase as any)
+            // Also update in Supabase for persistence using Admin Client
+            await adminSupabase
                 .from('system_settings')
                 .upsert({
                     setting_key: 'system_prompt',
