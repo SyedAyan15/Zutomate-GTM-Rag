@@ -101,27 +101,35 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
     if (error || !data) return
 
     setMessages((prev) => {
-      // Start with the authoritative server data
-      const nextState: Message[] = [...data]
+      // Use a Map to ensure unique messages by ID, prioritizing server data
+      const messageMap = new Map<string, Message>()
 
-      // OPTIMIZATION: merge valid local temp messages that haven't synced yet
-      if (prev.length > 0) {
-        prev.forEach(oldMsg => {
-          if (!oldMsg.id.toString().startsWith('temp-')) return
+      // 1. Add all server messages
+      data.forEach(msg => messageMap.set(msg.id.toString(), msg))
 
-          // Check if matches a new real message
-          const hasRealCounterpart = nextState.some(newMsg =>
+      // 2. Add local messages from previous state that aren't in server data yet
+      prev.forEach(oldMsg => {
+        const id = oldMsg.id.toString()
+        if (messageMap.has(id)) return
+
+        // If it's a temp message, only keep it if it hasn't been "confirmed" (matched by content/role) in server data
+        if (id.startsWith('temp-')) {
+          const hasBeenConfirmed = data.some(newMsg =>
             newMsg.role === oldMsg.role &&
             newMsg.content === oldMsg.content
           )
-
-          if (!hasRealCounterpart) {
-            nextState.push(oldMsg)
+          if (!hasBeenConfirmed) {
+            messageMap.set(id, oldMsg)
           }
-        })
-      }
+        } else {
+          // Keep existing "Real" messages even if they are missing from this specific (possibly stale) server fetch
+          messageMap.set(id, oldMsg)
+        }
+      })
 
-      return nextState.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      return Array.from(messageMap.values()).sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
     })
 
     // Scroll to bottom after loading messages
@@ -144,14 +152,14 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         (payload: { new: Message }) => {
           const newMessage = payload.new
           setMessages((prev) => {
-            // 1. Check if ID already exists
+            // 1. If ID already exists, do nothing
             if (prev.some(m => m.id === newMessage.id)) return prev
 
-            // 2. Check for matching content/role (optimistic peer)
+            // 2. Try to find an optimistic peer to replace
             const duplicateIndex = prev.findIndex(m =>
               m.role === newMessage.role &&
               m.content === newMessage.content &&
-              m.id.startsWith('temp-')
+              m.id.toString().startsWith('temp-')
             )
 
             if (duplicateIndex !== -1) {
@@ -160,13 +168,7 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
               return newMessages
             }
 
-            // Double check content uniqueness to avoid "double vision" if ID differs
-            const contentExists = prev.some(m =>
-              m.content === newMessage.content &&
-              m.role === newMessage.role
-            )
-            if (contentExists) return prev
-
+            // 3. Otherwise, ALWAYS append the new message (no more content-blocking)
             return [...prev, newMessage]
           })
           // Scroll on new message
