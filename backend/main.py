@@ -1,7 +1,14 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from pydantic import BaseModel
-from typing import List, Optional
 import os
+import json
+import requests
+import shutil
+import uvicorn
+import sys
+from typing import List, Optional
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from langchain_community.document_loaders import TextLoader, PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -10,11 +17,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from pinecone import Pinecone
-import shutil
-import uvicorn
-from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
-import sys
 
 if sys.stdout.encoding != 'utf-8':
     import io
@@ -308,85 +310,56 @@ async def delete_file(filename: str):
 
 # ============ SYSTEM SETTINGS ============
 
-import requests
-
 SYSTEM_PROMPT_FILE = "system_prompt.json"
 
+DEFAULT_PROMPT = """You are GTM Architect AI – a senior Go-To-Market strategist with deep expertise in outbound systems, ICP design, buyer mapping, tooling, and scalable revenue operations.
+
+You act as a strategic advisor, not a generic chatbot. Your goal is to help founders and GTM teams define their ICP, mapping their buyer journey, and build high-performance outbound engines."""
+
 def load_system_prompt():
-    prompt = """You are a Brand & GTM Strategy Assistant.
-
-Your task is strictly limited to the information present in the retrieved text. Do not assume or invent details.
-
-Step 1: Extract Brand Attributes
-
-From the provided text, identify and clearly list the following (only if mentioned):
-
-Brand mission / vision
-Core values
-Target audience / ICP
-Key pain points the brand addresses
-Product or service offering
-Unique value proposition (UVP)
-Differentiators vs competitors
-Brand tone & personality
-Pricing positioning (if mentioned)
-Market or industry
-
-If any attribute is missing, state "Not specified in the text."
-
-Step 2: Create a GTM Strategy
-
-Using only the extracted brand attributes, create a concise and actionable Go-To-Market strategy, including:
-
-Ideal customer segments
-Core messaging & positioning
-Primary acquisition channels
-Content angles & hooks
-Sales motion (self-serve, sales-led, hybrid, etc.)
-Funnel structure (awareness -> conversion -> retention)
-Key metrics to track
-Constraints
-
-Do not use external knowledge.
-Do not fill gaps with assumptions.
-Base every recommendation on the retrieved text.
-If data is insufficient, explain what is missing and how it limits the GTM strategy.
-
-Output Format
-
-Section 1: Brand Attributes (Structured List)
-Section 2: GTM Strategy (Bullet Points)
-Section 3: Missing Information (if any)"""
+    """Load prompt with fallback: Local File -> Supabase -> Default"""
+    current_prompt = DEFAULT_PROMPT
     
+    # 1. Try Local File Cache first (most reliable for quick restarts)
     try:
-        if os.path.exists(SYSTEM_PROMPT_FILE) and os.path.getsize(SYSTEM_PROMPT_FILE) > 0:
+        if os.path.exists(SYSTEM_PROMPT_FILE):
             with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("system_prompt", prompt)
-    except:
-        pass
+                cached = data.get("system_prompt")
+                if cached:
+                    print(f"DEBUG: Loaded system prompt from local cache ({len(cached)} chars)")
+                    current_prompt = cached
+    except Exception as e:
+        print(f"DEBUG: Local prompt load failed: {e}")
 
+    # 2. Try Supabase Sync (The source of truth)
     try:
         url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
         if url and key:
-            headers = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+            headers = {
+                "apikey": key, 
+                "Authorization": f"Bearer {key}", 
+                "Content-Type": "application/json"
+            }
+            # Look for the current system_prompt setting
             target_url = f"{url}/rest/v1/system_settings?select=setting_value&setting_key=eq.system_prompt"
-            response = requests.get(target_url, headers=headers, timeout=10)
+            response = requests.get(target_url, headers=headers, timeout=5)
+            
             if response.status_code == 200:
                 data = response.json()
                 if data and len(data) > 0:
-                    fetched_prompt = data[0].get("setting_value")
-                    try:
+                    remote_prompt = data[0].get("setting_value")
+                    if remote_prompt and remote_prompt != current_prompt:
+                        print("DEBUG: Syncing prompt with Supabase...")
+                        current_prompt = remote_prompt
+                        # Update local cache
                         with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
-                            json.dump({"system_prompt": fetched_prompt}, f)
-                    except:
-                        pass
-                    return fetched_prompt
-    except:
-        pass
+                            json.dump({"system_prompt": current_prompt}, f)
+    except Exception as e:
+        print(f"DEBUG: Supabase prompt sync failed: {e}")
 
-    return prompt
+    return current_prompt
 
 system_prompt_storage = {
     "system_prompt": load_system_prompt()
