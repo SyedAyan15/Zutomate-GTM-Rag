@@ -171,7 +171,7 @@ export default function LoginForm() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <div className="flex items-center">
                 <input
                   id="remember-me"
@@ -182,12 +182,6 @@ export default function LoginForm() {
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
                   Remember me
                 </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
-                  Forgot password?
-                </a>
               </div>
             </div>
 
