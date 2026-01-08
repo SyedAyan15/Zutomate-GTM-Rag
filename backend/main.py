@@ -318,14 +318,15 @@ async def delete_file(filename: str):
 
 # ============ SYSTEM SETTINGS ============
 
-DEFAULT_PROMPT = "" # No hardcoded instructions
+SYSTEM_PROMPT_FILE = "system_prompt.json"
+DEFAULT_PROMPT = "" # Minimal fallback
 
 # In-memory storage to prevent expensive DB lookups on every message
 _cached_prompt = None
 
 def load_system_prompt(force_sync=False):
     """
-    Exclusively load prompt from Supabase (Source of Truth).
+    Load prompt with priority: Memory -> Supabase (and cache) -> Local File -> Default
     """
     global _cached_prompt
     
@@ -352,11 +353,28 @@ def load_system_prompt(force_sync=False):
                     remote_prompt = data[0].get("setting_value")
                     if remote_prompt:
                         _cached_prompt = remote_prompt
+                        # Update local file cache silently
+                        try:
+                            with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
+                                json.dump({"system_prompt": _cached_prompt}, f, ensure_ascii=False, indent=2)
+                        except: pass
                         return _cached_prompt
     except Exception as e:
         print(f"DEBUG: Cloud sync failed: {e}")
 
-    # 3. Final Fallback (Neutral empty or minimal)
+    # 3. Try Local File (Persistent cache - if DB is offline)
+    try:
+        if os.path.exists(SYSTEM_PROMPT_FILE):
+            with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                cached = data.get("system_prompt")
+                if cached:
+                    _cached_prompt = cached
+                    return _cached_prompt
+    except Exception as e:
+        print(f"DEBUG: Local file load error: {e}")
+
+    # 4. Final Fallback
     return _cached_prompt or DEFAULT_PROMPT
 
 # Initial load from DB
