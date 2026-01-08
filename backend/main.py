@@ -313,27 +313,35 @@ async def delete_file(filename: str):
 
 SYSTEM_PROMPT_FILE = "system_prompt.json"
 
-DEFAULT_PROMPT = """You are GTM Architect AI – a senior Go-To-Market strategist with deep expertise in outbound systems, ICP design, buyer mapping, tooling, and scalable revenue operations.
+DEFAULT_PROMPT = "You are a helpful AI assistant."
 
-You act as a strategic advisor, not a generic chatbot. Your goal is to help founders and GTM teams define their ICP, mapping their buyer journey, and build high-performance outbound engines."""
+# In-memory storage to prevent expensive DB lookups on every message
+_cached_prompt = None
 
-def load_system_prompt():
-    """Load prompt with fallback: Local File -> Supabase -> Default"""
-    current_prompt = DEFAULT_PROMPT
+def load_system_prompt(force_sync=False):
+    """
+    Load prompt with priority: Memory -> Local File -> Supabase -> Default
+    """
+    global _cached_prompt
     
-    # 1. Try Local File Cache first (most reliable for quick restarts)
+    # 1. Use memory if available
+    if _cached_prompt and not force_sync:
+        return _cached_prompt
+
+    # 2. Try Local File Cache (The most persistent local source)
     try:
         if os.path.exists(SYSTEM_PROMPT_FILE):
             with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 cached = data.get("system_prompt")
                 if cached:
-                    print(f"DEBUG: Loaded system prompt from local cache ({len(cached)} chars)")
-                    current_prompt = cached
+                    _cached_prompt = cached
+                    if not force_sync:
+                        return _cached_prompt
     except Exception as e:
-        print(f"DEBUG: Local prompt load failed: {e}")
+        print(f"DEBUG: Local file load error: {e}")
 
-    # 2. Try Supabase Sync (The source of truth)
+    # 3. Try Supabase Sync (The Source of Truth)
     try:
         url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -343,7 +351,6 @@ def load_system_prompt():
                 "Authorization": f"Bearer {key}", 
                 "Content-Type": "application/json"
             }
-            # Look for the current system_prompt setting
             target_url = f"{url}/rest/v1/system_settings?select=setting_value&setting_key=eq.system_prompt"
             response = requests.get(target_url, headers=headers, timeout=5)
             
@@ -351,44 +358,46 @@ def load_system_prompt():
                 data = response.json()
                 if data and len(data) > 0:
                     remote_prompt = data[0].get("setting_value")
-                    if remote_prompt and remote_prompt != current_prompt:
-                        print("DEBUG: Syncing prompt with Supabase...")
-                        current_prompt = remote_prompt
-                        # Update local cache
+                    if remote_prompt:
+                        _cached_prompt = remote_prompt
+                        # Sync local file
                         with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
-                            json.dump({"system_prompt": current_prompt}, f)
+                            json.dump({"system_prompt": _cached_prompt}, f, ensure_ascii=False, indent=2)
+                        return _cached_prompt
     except Exception as e:
-        print(f"DEBUG: Supabase prompt sync failed: {e}")
+        print(f"DEBUG: Database sync failed: {e}")
 
-    return current_prompt
+    # 4. Fallback to default only if nothing else exists
+    return _cached_prompt or DEFAULT_PROMPT
 
-system_prompt_storage = {
-    "system_prompt": load_system_prompt()
-}
+# Perform initial load
+load_system_prompt(force_sync=True)
 
 @app.get("/settings/system-prompt")
-async def get_system_prompt():
+async def get_system_prompt(sync: bool = False):
     """Get current system prompt"""
-    return {"system_prompt": system_prompt_storage["system_prompt"]}
+    return {"system_prompt": load_system_prompt(force_sync=sync)}
 
 @app.put("/settings/system-prompt")
 async def update_system_prompt(prompt: dict):
-    """Update system prompt"""
+    """Update system prompt and persist"""
+    global _cached_prompt
     try:
         new_prompt = prompt.get("system_prompt", "")
         if not new_prompt or len(new_prompt.strip()) == 0:
             raise HTTPException(status_code=400, detail="System prompt cannot be empty")
         
-        system_prompt_storage["system_prompt"] = new_prompt
+        # Update memory
+        _cached_prompt = new_prompt
         
-        # Persist to file
+        # Persist to local file
         try:
             with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
                 json.dump({"system_prompt": new_prompt}, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f" Error saving system prompt to file: {e}")
 
-        print(f" System prompt updated")
+        print(f" System prompt updated in backend memory and file")
         return {"message": "System prompt updated", "system_prompt": new_prompt}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
