@@ -42,6 +42,7 @@ temp_*
 
 # Database Scripts
 *.sql
+!Supabase_Performance_Fix.sql
 
 # Backend Cleanup - EXCLUDE ALL BY DEFAULT
 backend/*
