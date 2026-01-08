@@ -28,7 +28,7 @@ export default function MessageList({ messages, loading }: MessageListProps) {
         >
           <div
             className={cn(
-              "max-w-[85%] lg:max-w-[75%] px-5 py-4 rounded-2xl shadow-sm transition-all",
+              "max-w-[92%] md:max-w-[85%] lg:max-w-[75%] px-4 md:px-5 py-3 md:py-4 rounded-2xl shadow-sm transition-all",
               message.role === 'user'
                 ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none ml-auto'
                 : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none mr-auto'
@@ -65,19 +65,22 @@ export default function MessageList({ messages, loading }: MessageListProps) {
             </p>
           </div>
         </div>
-      ))}
-      {loading && (
-        <div className="flex justify-start">
-          <div className="bg-white border border-gray-100 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
-            <div className="flex space-x-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+      ))
+      }
+      {
+        loading && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-gray-100 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
+              <div className="flex space-x-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   )
 }
 

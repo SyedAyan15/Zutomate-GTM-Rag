@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../../lib/supabase/client'
 import type { Chat } from '../../lib/types'
-import { LogOut } from 'lucide-react'
+import { LogOut, X } from 'lucide-react'
 
 interface ChatSidebarProps {
   currentChatId: string | null
@@ -13,6 +13,7 @@ interface ChatSidebarProps {
   onViewSelect?: (view: 'chat' | 'knowledge' | 'settings') => void
   onUploadSuccess?: () => void
   onLogout?: () => void
+  onClose?: () => void
 }
 
 export default function ChatSidebar({
@@ -23,6 +24,7 @@ export default function ChatSidebar({
   onViewSelect,
   onUploadSuccess,
   onLogout,
+  onClose,
 }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([])
   const [loading, setLoading] = useState(true)
@@ -176,7 +178,21 @@ export default function ChatSidebar({
   }
 
   return (
-    <div className="w-64 bg-[#0A192F] border-r border-[#112240] flex flex-col text-white">
+    <div className="w-full h-full bg-[#0A192F] border-r border-[#112240] flex flex-col text-white shadow-2xl">
+      <div className="p-4 border-b border-[#112240] flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-xl font-bold tracking-tight">
+            <span className="text-orange-500">Z</span>utomate
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+        >
+          <X className="h-5 w-5 text-gray-400" />
+        </button>
+      </div>
+
       <div className="p-4 border-b border-[#112240]">
         <button
           onClick={handleNewChat}

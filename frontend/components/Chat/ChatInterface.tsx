@@ -340,14 +340,22 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col h-full bg-slate-50 relative">
+      {/* Admin indicator for mobile */}
+      {isAdmin && (
+        <div className="md:hidden px-4 py-2 bg-blue-50/50 border-b border-blue-100 flex items-center space-x-2">
+          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Admin Chat Monitoring</span>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto px-2 py-4 md:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <MessageList messages={messages} loading={loading} />
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="max-w-4xl w-full mx-auto px-4 pb-4">
+      <div className="max-w-4xl w-full mx-auto px-2 md:px-4 pb-2 md:pb-4">
         <MessageInput onSendMessage={handleSendMessage} disabled={loading} />
       </div>
     </div>

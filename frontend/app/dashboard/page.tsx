@@ -9,6 +9,7 @@ import ChatInterface from '@/components/Chat/ChatInterface'
 import ChatSidebar from '@/components/Chat/ChatSidebar'
 import KnowledgeBase from '@/components/Admin/KnowledgeBase'
 import AdminSettings from '@/components/Admin/AdminSettings'
+import { Menu, X } from 'lucide-react'
 
 type ViewType = 'chat' | 'knowledge' | 'settings'
 
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const [chatId, setChatId] = useState<string | null>(null)
   const [activeView, setActiveView] = useState<ViewType>('chat')
   const [loading, setLoading] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [session, setSession] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -123,21 +125,57 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
-      <div className="flex-1 flex overflow-hidden">
-        <ChatSidebar
-          currentChatId={chatId}
-          onChatSelect={(id) => {
-            setChatId(id)
-            setActiveView('chat')
-          }}
-          isAdmin={isAdmin}
-          activeView={activeView}
-          onViewSelect={setActiveView}
-          onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
-          onLogout={handleLogout}
-        />
-        <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0A192F] text-white border-b border-[#112240] z-20">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 -ml-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <Menu className="h-6 w-6 text-orange-500" />
+          </button>
+          <span className="font-bold tracking-tight text-lg">
+            <span className="text-orange-500">Z</span>utomate
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Sidebar Overlay for Mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar Container */}
+        <div className={`
+          fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-10
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+          <ChatSidebar
+            currentChatId={chatId}
+            onChatSelect={(id) => {
+              setChatId(id)
+              setActiveView('chat')
+              setIsSidebarOpen(false) // Auto-close on selection
+            }}
+            isAdmin={isAdmin}
+            activeView={activeView}
+            onViewSelect={(view) => {
+              setActiveView(view)
+              setIsSidebarOpen(false) // Auto-close on selection
+            }}
+            onUploadSuccess={() => setRefreshKey(prev => prev + 1)}
+            onLogout={handleLogout}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden relative z-0">
           {activeView === 'chat' && (
             <ChatInterface key={chatId} chatId={chatId} onChatChange={setChatId} isAdmin={isAdmin} />
           )}
@@ -147,7 +185,7 @@ export default function DashboardPage() {
             </div>
           )}
           {activeView === 'settings' && (
-            <div className="flex-1 overflow-y-auto bg-white p-8">
+            <div className="flex-1 overflow-y-auto bg-white p-4 md:p-8">
               <AdminSettings />
             </div>
           )}
