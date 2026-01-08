@@ -97,7 +97,7 @@ export default function LoginForm() {
           </h1>
           <div className="w-48 h-1 bg-orange-500 mb-8 rounded-full"></div>
           <p className="text-2xl font-bold text-gray-300 italic">
-            \"Your First Go-to Market AI Agent\"
+            Your First Go-to Market AI Agent
           </p>
           <p className="mt-8 text-gray-400 leading-relaxed">
             Experience the power of AI-driven market analysis. Access your knowledge base, generate strategies, and accelerate your growth with precision.
