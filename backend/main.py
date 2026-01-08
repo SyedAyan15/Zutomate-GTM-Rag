@@ -318,36 +318,23 @@ async def delete_file(filename: str):
 
 SYSTEM_PROMPT_FILE = "system_prompt.json"
 
-DEFAULT_PROMPT = "You are a helpful AI assistant."
+DEFAULT_PROMPT = "You are a helpful, professional AI assistant. Please refer to the system settings and provided context for specific behavior instructions."
 
 # In-memory storage to prevent expensive DB lookups on every message
 _cached_prompt = None
 
 def load_system_prompt(force_sync=False):
     """
-    Load prompt with priority: Memory -> Local File -> Supabase -> Default
+    Load prompt with priority: Memory -> Supabase -> Local File -> Default
     """
     global _cached_prompt
     
-    # 1. Use memory if available (Fastest)
+    # 1. Use memory if available (Fastest) - unless forcing a fresh sync
     if _cached_prompt and not force_sync:
         return _cached_prompt
 
-    # 2. Try Local File (Persistent local source)
-    if not force_sync:
-        try:
-            if os.path.exists(SYSTEM_PROMPT_FILE):
-                with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    cached = data.get("system_prompt")
-                    if cached:
-                        _cached_prompt = cached
-                        return _cached_prompt
-        except Exception as e:
-            print(f"DEBUG: Local file load error: {e}")
-
-    # 3. Try Supabase Sync (The Source of Truth)
-    # Only if force_sync=True OR if we have nothing in memory/file
+    # 2. Try Supabase Sync (The true Source of Truth)
+    # This ensures that even if a local file exists, we check for updates from the cloud
     try:
         url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -358,7 +345,7 @@ def load_system_prompt(force_sync=False):
                 "Content-Type": "application/json"
             }
             target_url = f"{url}/rest/v1/system_settings?select=setting_value&setting_key=eq.system_prompt"
-            response = requests.get(target_url, headers=headers, timeout=5)
+            response = requests.get(target_url, headers=headers, timeout=2) # Fast timeout
             
             if response.status_code == 200:
                 data = response.json()
@@ -366,18 +353,33 @@ def load_system_prompt(force_sync=False):
                     remote_prompt = data[0].get("setting_value")
                     if remote_prompt:
                         _cached_prompt = remote_prompt
-                        # Keep local file in sync with DB
-                        with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
-                            json.dump({"system_prompt": _cached_prompt}, f, ensure_ascii=False, indent=2)
+                        # Update local file cache asynchronously/silently
+                        try:
+                            with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
+                                json.dump({"system_prompt": _cached_prompt}, f, ensure_ascii=False, indent=2)
+                        except: pass
                         return _cached_prompt
     except Exception as e:
-        print(f"DEBUG: Database sync failed: {e}")
+        print(f"DEBUG: Cloud sync failed or timed out: {e}")
 
-    # 4. Final Fallback
-    return _cached_prompt or DEFAULT_PROMPT
+    # 3. Try Local File (Persistent cache - use only if Supabase is offline/slow)
+    try:
+        if os.path.exists(SYSTEM_PROMPT_FILE):
+            with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                cached = data.get("system_prompt")
+                if cached:
+                    _cached_prompt = cached
+                    return _cached_prompt
+    except Exception as e:
+        print(f"DEBUG: Local file load error: {e}")
 
-# Perform initial load from file/memory (Skip expensive/risky DB sync on startup)
-load_system_prompt(force_sync=False)
+    # 4. Final Fallback (Neutral default)
+    return DEFAULT_PROMPT
+
+# Perform initial load from Supabase with a fallback to cache
+# We do this at the bottom of the file so all functions are defined
+load_system_prompt(force_sync=True)
 
 @app.get("/settings/system-prompt")
 async def get_system_prompt(sync: bool = False):
