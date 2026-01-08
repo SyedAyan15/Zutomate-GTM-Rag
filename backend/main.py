@@ -65,6 +65,9 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     print(f"DEBUG: Processing message: {request.message[:50]}...")
+    # Initialize standalone question with original message as daily default
+    standalone_question = request.message
+    
     try:
         # Load the most recent prompt (checks local file -> Supabase -> Default)
         sys_prompt = load_system_prompt()
@@ -96,7 +99,6 @@ async def chat(request: ChatRequest):
             try:
                 print(f"DEBUG: Fetching from Pinecone using MMR (Query: {standalone_question})...")
                 # Use MMR (Maximal Marginal Relevance) checks for diversity as well as relevance
-                # k=6 provides more context window for the LLM to synthesize
                 retriever = vectorstore.as_retriever(
                     search_type="mmr", 
                     search_kwargs={"k": 6, "lambda_mult": 0.7}
@@ -149,23 +151,20 @@ async def chat(request: ChatRequest):
                 | StrOutputParser()
             )
             
-            # pass original message or standalone? Usually standalone for vector search, 
-            # but for answer generation, the original intent with context is fine. 
-            # However, providing the standalone question to the generator often helps it focus 
-            # if the original was just "Why?".
             response = chain.invoke(standalone_question)
         
         print("DEBUG: Chat response generated successfully")
         return {"response": response}
 
     except Exception as e:
-        print(f"Error in chat: {str(e)}")
+        print(f"Error in chat processing: {str(e)}")
         # Fallback to direct LLM if RAG chain fails
         try:
             response = llm.invoke(request.message).content
             return {"response": response}
-        except:
-             raise HTTPException(status_code=500, detail=str(e))
+        except Exception as llm_err:
+             print(f"CRITICAL: LLM fallback failed: {llm_err}")
+             return {"response": "I encountered an error processing your request. Please try again in a moment.", "error": str(e)}
 
 class TitleRequest(BaseModel):
     message: str

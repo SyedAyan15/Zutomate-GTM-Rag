@@ -100,15 +100,28 @@ export async function POST(request: NextRequest) {
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: response.statusText }))
-        console.error('Python Backend Error:', errorData)
-        return NextResponse.json({ error: 'Backend Error', details: errorData.detail || 'The RAG server failed to process the message.' }, { status: 500 })
+      let data;
+      const responseTextForLog = await response.text();
+      try {
+        data = JSON.parse(responseTextForLog);
+      } catch (e) {
+        console.error('Python Backend returned non-JSON:', responseTextForLog);
+        return NextResponse.json({
+          error: 'Backend Malformed Response',
+          details: 'The RAG server returned an unexpected response format.'
+        }, { status: 500 });
       }
 
-      const data = await response.json()
+      if (!response.ok) {
+        console.error('Python Backend Error:', data)
+        return NextResponse.json({
+          error: 'Backend Error',
+          details: data?.detail || data?.error || 'The RAG server failed to process the message.'
+        }, { status: 500 })
+      }
+
       const backendResponse = data.response || data.message || 'I processed your request.'
-      const responseText = typeof backendResponse === 'string' ? backendResponse : JSON.stringify(backendResponse)
+      const finalResponseText = typeof backendResponse === 'string' ? backendResponse : JSON.stringify(backendResponse)
 
       // 2. PERSIST ASSISTANT RESPONSE
       console.log('💾 Saving assistant response to database...')
@@ -117,7 +130,7 @@ export async function POST(request: NextRequest) {
         await supabaseAny.from('messages').insert({
           chat_id: chatId,
           role: 'assistant',
-          content: responseText,
+          content: finalResponseText,
           user_id: activeUser.id
         })
 
@@ -129,7 +142,7 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({
-        response: responseText,
+        response: finalResponseText,
       })
     } catch (backendError: any) {
       console.error('Chat API Error:', backendError.message)

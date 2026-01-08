@@ -219,9 +219,17 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         }),
       })
 
-      const data = await response.json()
+      let data;
+      try {
+        const text = await response.text();
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('API returned non-JSON:', e);
+        throw new Error('The server returned an invalid response. Please try again.');
+      }
+
       console.log('DEBUG: API Response', data)
-      if (!response.ok) throw new Error(data.error || 'Failed to send')
+      if (!response.ok) throw new Error(data.details || data.error || 'Failed to send')
 
       // 3. SHOW ASSISTANT MESSAGE IMMEDIATELY
       // Use fallback fields if response format varies
