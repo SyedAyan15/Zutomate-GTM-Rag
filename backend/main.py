@@ -76,10 +76,10 @@ async def chat(request: ChatRequest):
         # --- 1. PREPARE HISTORY ---
         chat_history_str = ""
         if request.history and len(request.history) > 0:
-            chat_history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in request.history[-5:]]) # Last 5 messages for better context
+            # Increase history to 8 messages for better deep-thread memory
+            chat_history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in request.history[-8:]])
         
         # --- 2. CONTEXTUALIZE QUESTION (History Awareness for Retrieval) ---
-        # Skip rephrasing for greetings or very short messages to keep it natural
         is_greeting = len(request.message.split()) < 4
         
         if chat_history_str and not is_greeting:
@@ -92,16 +92,17 @@ async def chat(request: ChatRequest):
                 standalone_question = rephrase_chain.invoke({"chat_history": chat_history_str, "question": request.message})
                 print(f"DEBUG: Rephrased Query: '{standalone_question}'")
             except Exception as e:
-                print(f"DEBUG: Rephrasing failed, using original: {e}")
+                print(f"DEBUG: Rephrasing failed: {e}")
 
-        # --- 3. RETRIEVAL (MMR Search) ---
+        # --- 3. RETRIEVAL (Similarity Search) ---
+        # Switching from MMR to Similarity for more "direct" hits as requested
         context_docs = []
         if vectorstore:
             try:
-                print(f"DEBUG: Fetching from Pinecone using MMR (Query: {standalone_question})...")
+                print(f"DEBUG: Fetching from Pinecone using Similarity Search (k=10)...")
                 retriever = vectorstore.as_retriever(
-                    search_type="mmr", 
-                    search_kwargs={"k": 6, "lambda_mult": 0.7}
+                    search_type="similarity", 
+                    search_kwargs={"k": 10}
                 )
                 context_docs = retriever.invoke(standalone_question)
                 print(f"DEBUG: Found {len(context_docs)} docs")
@@ -116,10 +117,10 @@ async def chat(request: ChatRequest):
             Chat History (Recent):
             {{chat_history}}
             
-            Instructions: 
-            - Answer the question based on the chat history and your general knowledge.
+            CRITICAL INSTRUCTIONS:
+            - Scan the Chat History carefully. If the user previously mentioned names, companies, or details, USE THEM.
+            - If no context/history exists for the question, use your general knowledge.
             - If the user provides a greeting, respond warmly.
-            - If they previously told you something (like their name or company), remember it!
             
             Question: {{question}}
             Answer:"""
@@ -135,10 +136,11 @@ async def chat(request: ChatRequest):
             {{chat_history}}
             
             Core Instructions:
-            - You are a helpful, professional AI assistant.
-            - Use the provided context AND chat history to answer.
-            - If the answer isn't in the context but is in the chat history, use the history.
-            - Stay concise and professional.
+            - You are a professional AI Advisor.
+            - PRIORITY 1: Use the provided Context documents below. They contain the specific data the user expects you to use.
+            - PRIORITY 2: Use the Chat History for conversation continuity (names, previous facts).
+            - If the answer is in the Context, provide it directly and accurately.
+            - Cite your sources if possible.
             
             Context:
             {{context}}

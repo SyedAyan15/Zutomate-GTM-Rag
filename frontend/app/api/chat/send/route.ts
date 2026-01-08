@@ -4,6 +4,7 @@ export const maxDuration = 60
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { Database } from '../../../../lib/types'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,12 +58,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get chat history for context
-    const { data: messages } = await supabase
+    // Get chat history for context using Admin Client to bypass RLS issues
+    const adminSupabase = await createAdminClient()
+    const { data: messages } = await adminSupabase
       .from('messages')
       .select('role, content')
       .eq('chat_id', chatId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(15)
+
+    // Reverse to get chronological order
+    const chronologicalMessages = [...(messages || [])].reverse()
     // 1. PERSIST USER MESSAGE IMMEDIATELY
     // This ensures the question is saved even if the AI backend fails or times out
     try {
@@ -79,7 +85,7 @@ export async function POST(request: NextRequest) {
       // We continue anyway so the user might still get an answer even if save failed
     }
 
-    const conversationHistory = (messages || []).map((msg: any) => ({
+    const conversationHistory = chronologicalMessages.map((msg: any) => ({
       role: msg.role,
       content: msg.content,
     }))
