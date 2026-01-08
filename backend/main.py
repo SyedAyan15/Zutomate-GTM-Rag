@@ -73,18 +73,19 @@ async def chat(request: ChatRequest):
         sys_prompt = load_system_prompt()
         print(f"DEBUG: Using system prompt ({len(sys_prompt)} chars)")
         
-        # --- 1. CONTEXTUALIZE QUESTION (History Awareness) ---
+        # --- 1. PREPARE HISTORY ---
+        chat_history_str = ""
+        if request.history and len(request.history) > 0:
+            chat_history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in request.history[-5:]]) # Last 5 messages for better context
+        
+        # --- 2. CONTEXTUALIZE QUESTION (History Awareness for Retrieval) ---
         # Skip rephrasing for greetings or very short messages to keep it natural
         is_greeting = len(request.message.split()) < 4
         
-        if request.history and len(request.history) > 0 and not is_greeting:
-            print("DEBUG: Rephrasing question with history...")
-            
-            # Format history for the prompt
-            chat_history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in request.history[-4:]]) # Last 4 messages
-            
+        if chat_history_str and not is_greeting:
+            print("DEBUG: Rephrasing question with history for retrieval...")
             rephrase_prompt = ChatPromptTemplate.from_template(
-                "Given the following conversation and a follow-up question, rephrase the follow-up question to be a standalone question.\n\nChat History:\n{chat_history}\n\nFollow Up Input: {question}\n\nStandalone Question:"
+                "Given the following conversation and a follow-up question, rephrase the follow-up question into a standalone question for retrieval.\n\nChat History:\n{chat_history}\n\nFollow Up Input: {question}\n\nStandalone Question:"
             )
             rephrase_chain = rephrase_prompt | llm | StrOutputParser()
             try:
@@ -93,12 +94,11 @@ async def chat(request: ChatRequest):
             except Exception as e:
                 print(f"DEBUG: Rephrasing failed, using original: {e}")
 
-        # --- 2. RETRIEVAL (MMR Search) ---
+        # --- 3. RETRIEVAL (MMR Search) ---
         context_docs = []
         if vectorstore:
             try:
                 print(f"DEBUG: Fetching from Pinecone using MMR (Query: {standalone_question})...")
-                # Use MMR (Maximal Marginal Relevance) checks for diversity as well as relevance
                 retriever = vectorstore.as_retriever(
                     search_type="mmr", 
                     search_kwargs={"k": 6, "lambda_mult": 0.7}
@@ -108,31 +108,37 @@ async def chat(request: ChatRequest):
             except Exception as e:
                 print(f"DEBUG: Retrieval error: {str(e)}")
         
-        # --- 3. GENERATION ---
+        # --- 4. GENERATION (History + Context + Question) ---
         if not context_docs:
             print("DEBUG: Using General Knowledge Fallback")
             template = f"""{sys_prompt}
             
+            Chat History (Recent):
+            {{chat_history}}
+            
             Instructions: 
-            - Answer the question based on your general knowledge.
-            - If you don't know, admit it perfectly.
+            - Answer the question based on the chat history and your general knowledge.
+            - If the user provides a greeting, respond warmly.
+            - If they previously told you something (like their name or company), remember it!
             
             Question: {{question}}
             Answer:"""
             
             prompt = ChatPromptTemplate.from_template(template)
             chain = prompt | llm | StrOutputParser()
-            response = chain.invoke({"question": request.message})
+            response = chain.invoke({"chat_history": chat_history_str, "question": request.message})
         else:
             print("DEBUG: Using RAG Chain (Production Mode)")
             template = f"""{sys_prompt}
             
+            Chat History (Recent):
+            {{chat_history}}
+            
             Core Instructions:
             - You are a helpful, professional AI assistant.
-            - If the user provides a greeting (like 'Hello', 'Hi', 'Hey'), respond warmly and politely.
-            - For factual questions, use the provided context to answer. 
-            - If a question is asked and the answer is not in the context, admit that you don't know based on the provided documents, but remain helpful.
-            - Keep the answer concise and professional.
+            - Use the provided context AND chat history to answer.
+            - If the answer isn't in the context but is in the chat history, use the history.
+            - Stay concise and professional.
             
             Context:
             {{context}}
@@ -145,7 +151,7 @@ async def chat(request: ChatRequest):
             context_text = "\n\n".join([f"[Source: {d.metadata.get('filename', 'doc')}]: {d.page_content}" for d in context_docs])
             
             chain = (
-                {"context": lambda x: context_text, "question": RunnablePassthrough()}
+                {"context": lambda x: context_text, "chat_history": lambda x: chat_history_str, "question": RunnablePassthrough()}
                 | prompt
                 | llm
                 | StrOutputParser()
