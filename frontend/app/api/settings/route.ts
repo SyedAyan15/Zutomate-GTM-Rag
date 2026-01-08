@@ -13,36 +13,18 @@ const getAdminClient = () => {
 
 // GET: Fetch system settings
 export async function GET(request: NextRequest) {
+    const start = Date.now();
     try {
-        let supabase = await createClient()
-
-        // Verify admin
-        let { data: { user } } = await supabase.auth.getUser()
-
-        // Fallback: Check for Bearer token
-        if (!user) {
-            const authHeader = request.headers.get('Authorization')
-            if (authHeader) {
-                const token = authHeader.split(' ')[1]
-                const directClient = createSupabaseClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                    { global: { headers: { Authorization: `Bearer ${token}` } } }
-                )
-                const { data: directUser } = await directClient.auth.getUser()
-                if (directUser.user) {
-                    user = directUser.user
-                }
-            }
-        }
+        // Use a single, efficient client for admin check
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // Use Admin Client for DB operations to bypass RLS
+        // Quick profile check using service role to bypass RLS complexity
         const adminSupabase = getAdminClient()
-
         const { data: profile } = await adminSupabase
             .from('profiles')
             .select('role')
@@ -53,35 +35,45 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        // Fetch system prompt from Python backend
+        console.log(`Settings API: Auth check took ${Date.now() - start}ms`);
+
+        // Fetch system prompt from Python backend with explicit timeout
         let baseUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099'
-        baseUrl = baseUrl.replace(/\/upload$/, '')
-        const pythonBackendUrl = baseUrl.endsWith('/settings/system-prompt')
-            ? baseUrl
-            : `${baseUrl}/settings/system-prompt`
+        const pythonBackendUrl = baseUrl.replace(/\/upload$/, '/settings/system-prompt')
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000) // 3s timeout for backend
 
         try {
-            const response = await fetch(pythonBackendUrl)
+            const response = await fetch(pythonBackendUrl, { signal: controller.signal })
+            clearTimeout(timeoutId)
+
             if (!response.ok) {
-                console.error(`Backend returned ${response.status}: ${await response.text()}`)
-                return NextResponse.json({
-                    system_prompt: 'Error: Could not fetch from backend.',
-                    debug_url: pythonBackendUrl
-                })
+                throw new Error(`Backend fetch failed: ${response.status}`)
             }
             const data = await response.json()
+            console.log(`Settings API: Backend fetch took ${Date.now() - start}ms total`);
             return NextResponse.json(data)
-        } catch (err) {
-            console.error('Backend fetch error:', err)
+        } catch (err: any) {
+            clearTimeout(timeoutId)
+            console.error('Settings API: Backend fetch error:', err.name === 'AbortError' ? 'Timeout' : err.message)
+
+            // Fallback: Try fetching directly from Supabase if backend is slow/offline
+            // This prevents the screen from being stuck on "Loading"
+            const { data: settings } = await adminSupabase
+                .from('system_settings')
+                .select('setting_value')
+                .eq('setting_key', 'system_prompt')
+                .single()
+
             return NextResponse.json({
-                system_prompt: 'Error connecting to Python backend.',
-                error: (err as any).message,
-                debug_url: pythonBackendUrl
+                system_prompt: settings?.setting_value || 'Direct fetch fallback',
+                is_fallback: true
             })
         }
     } catch (error: any) {
         console.error('Settings GET error:', error)
-        return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
 

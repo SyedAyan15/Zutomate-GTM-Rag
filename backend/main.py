@@ -324,24 +324,25 @@ def load_system_prompt(force_sync=False):
     """
     global _cached_prompt
     
-    # 1. Use memory if available
+    # 1. Use memory if available (Fastest)
     if _cached_prompt and not force_sync:
         return _cached_prompt
 
-    # 2. Try Local File Cache (The most persistent local source)
-    try:
-        if os.path.exists(SYSTEM_PROMPT_FILE):
-            with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                cached = data.get("system_prompt")
-                if cached:
-                    _cached_prompt = cached
-                    if not force_sync:
+    # 2. Try Local File (Persistent local source)
+    if not force_sync:
+        try:
+            if os.path.exists(SYSTEM_PROMPT_FILE):
+                with open(SYSTEM_PROMPT_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    cached = data.get("system_prompt")
+                    if cached:
+                        _cached_prompt = cached
                         return _cached_prompt
-    except Exception as e:
-        print(f"DEBUG: Local file load error: {e}")
+        except Exception as e:
+            print(f"DEBUG: Local file load error: {e}")
 
     # 3. Try Supabase Sync (The Source of Truth)
+    # Only if force_sync=True OR if we have nothing in memory/file
     try:
         url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -360,18 +361,18 @@ def load_system_prompt(force_sync=False):
                     remote_prompt = data[0].get("setting_value")
                     if remote_prompt:
                         _cached_prompt = remote_prompt
-                        # Sync local file
+                        # Keep local file in sync with DB
                         with open(SYSTEM_PROMPT_FILE, "w", encoding="utf-8") as f:
                             json.dump({"system_prompt": _cached_prompt}, f, ensure_ascii=False, indent=2)
                         return _cached_prompt
     except Exception as e:
         print(f"DEBUG: Database sync failed: {e}")
 
-    # 4. Fallback to default only if nothing else exists
+    # 4. Final Fallback
     return _cached_prompt or DEFAULT_PROMPT
 
-# Perform initial load
-load_system_prompt(force_sync=True)
+# Perform initial load from file/memory (Skip expensive/risky DB sync on startup)
+load_system_prompt(force_sync=False)
 
 @app.get("/settings/system-prompt")
 async def get_system_prompt(sync: bool = False):
