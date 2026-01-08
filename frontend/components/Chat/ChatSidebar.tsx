@@ -193,21 +193,21 @@ export default function ChatSidebar({
               className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'chat' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
-              <span>💬</span> <span>Chat Logs</span>
+              <span>Chat Logs</span>
             </button>
             <button
               onClick={() => onViewSelect?.('knowledge')}
               className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'knowledge' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
-              <span>📁</span> <span>Knowledge Base</span>
+              <span>Knowledge Base</span>
             </button>
             <button
               onClick={() => onViewSelect?.('settings')}
               className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'settings' ? 'bg-orange-500/10 text-orange-500' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
-              <span>⚙️</span> <span>System Prompt</span>
+              <span>System Prompt</span>
             </button>
           </div>
         )}
