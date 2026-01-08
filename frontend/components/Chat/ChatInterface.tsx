@@ -317,8 +317,8 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
             Zutomate
           </h1>
           <div className="w-24 h-1 bg-orange-500 mx-auto mb-6 rounded-full"></div>
-          <h2 className="text-2xl font-light text-white mb-8 italic">
-            "Your First Go-to Market AI Agent"
+          <h2 className="text-2xl font-bold text-white mb-8 italic">
+            \"Your First Go-to Market AI Agent\"
           </h2>
           <button
             onClick={handleNewChat}

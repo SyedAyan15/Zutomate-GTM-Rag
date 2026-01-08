@@ -92,8 +92,8 @@ export default function SignupForm() {
             Join <span className="text-orange-500">Zutomate</span>
           </h1>
           <div className="w-64 h-1 bg-orange-500 mb-8 rounded-full"></div>
-          <p className="text-2xl font-light text-gray-300 italic">
-            "Your First Go-to Market AI Agent"
+          <p className="text-2xl font-bold text-gray-300 italic">
+            \"Your First Go-to Market AI Agent\"
           </p>
           <p className="mt-8 text-gray-400 leading-relaxed">
             Create your account today to start leveraging AI for your market strategy. Secure, fast, and intelligent.
