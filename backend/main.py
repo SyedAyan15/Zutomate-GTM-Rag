@@ -319,7 +319,8 @@ async def delete_file(filename: str):
 # ============ SYSTEM SETTINGS ============
 
 SYSTEM_PROMPT_FILE = "system_prompt.json"
-DEFAULT_PROMPT = "" # Minimal fallback
+DEFAULT_PROMPT = """You are GTM Architect AI, a professional advisor specialized in Go-to-Market strategies. 
+Your goal is to assist users in building, scaling, and optimizing their GTM operations using provided documents and your deep expertise."""
 
 # In-memory storage to prevent expensive DB lookups on every message
 _cached_prompt = None
@@ -374,8 +375,12 @@ def load_system_prompt(force_sync=False):
     except Exception as e:
         print(f"DEBUG: Local file load error: {e}")
 
-    # 4. Final Fallback
-    return _cached_prompt or DEFAULT_PROMPT
+    # 4. Final Fallback (If all else fails, use the hardcoded recovery prompt)
+    if not _cached_prompt:
+        print("DEBUG: All prompt sources failed. Using hardcoded recovery baseline.")
+        return DEFAULT_PROMPT
+    
+    return _cached_prompt
 
 # Initial load from DB
 try:
@@ -407,7 +412,7 @@ async def update_system_prompt(prompt: dict):
         except Exception as e:
             print(f" Error saving system prompt to file: {e}")
 
-        print(f" System prompt updated in backend memory and file")
+        print(f"System prompt updated in backend memory and file")
         return {"message": "System prompt updated", "system_prompt": new_prompt}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
