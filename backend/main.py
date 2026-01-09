@@ -319,8 +319,7 @@ async def delete_file(filename: str):
 # ============ SYSTEM SETTINGS ============
 
 SYSTEM_PROMPT_FILE = "system_prompt.json"
-DEFAULT_PROMPT = """You are GTM Architect AI, a professional advisor specialized in Go-to-Market strategies. 
-Your goal is to assist users in building, scaling, and optimizing their GTM operations using provided documents and your deep expertise."""
+DEFAULT_PROMPT = "" 
 
 # In-memory storage to prevent expensive DB lookups on every message
 _cached_prompt = None
