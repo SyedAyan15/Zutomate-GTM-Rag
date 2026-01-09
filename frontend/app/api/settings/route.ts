@@ -37,9 +37,10 @@ export async function GET(request: NextRequest) {
 
         console.log(`Settings API: Auth check took ${Date.now() - start}ms`);
 
-        // Fetch system prompt from Python backend with explicit timeout
+        // Fetch system prompt from Python backend with robust URL construction
         let baseUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099'
-        const pythonBackendUrl = baseUrl.replace(/\/upload$/, '/settings/system-prompt')
+        const cleanBaseUrl = baseUrl.replace(/\/upload$/, '').replace(/\/$/, '')
+        const pythonBackendUrl = `${cleanBaseUrl}/settings/system-prompt`
 
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 3000) // 3s timeout for backend
@@ -52,6 +53,12 @@ export async function GET(request: NextRequest) {
                 throw new Error(`Backend fetch failed: ${response.status}`)
             }
             const data = await response.json()
+
+            // Validate that we actually got a prompt back
+            if (!data || typeof data.system_prompt === 'undefined') {
+                throw new Error('Invalid response from backend: missing system_prompt')
+            }
+
             console.log(`Settings API: Backend fetch took ${Date.now() - start}ms total`);
             return NextResponse.json(data)
         } catch (err: any) {
@@ -126,12 +133,10 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'System prompt cannot be empty' }, { status: 400 })
         }
 
-        // Update in Python backend
+        // Update in Python backend with robust URL construction
         let baseUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:8099'
-        baseUrl = baseUrl.replace(/\/upload$/, '')
-        const pythonBackendUrl = baseUrl.endsWith('/settings/system-prompt')
-            ? baseUrl
-            : `${baseUrl}/settings/system-prompt`
+        const cleanBaseUrl = baseUrl.replace(/\/upload$/, '').replace(/\/$/, '')
+        const pythonBackendUrl = `${cleanBaseUrl}/settings/system-prompt`
 
         try {
             const response = await fetch(pythonBackendUrl, {
