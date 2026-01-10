@@ -80,7 +80,7 @@ export default function SignupForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 md:bg-white">
       {/* Left Side - Hero/Branding */}
       <div className="hidden md:flex flex-1 bg-[#0A192F] items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] to-[#112240] opacity-90"></div>
@@ -104,10 +104,17 @@ export default function SignupForm() {
 
       {/* Right Side - Signup Form */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-12 lg:p-16">
-        <div className="max-w-md w-full space-y-10">
+        <div className="max-w-md w-full space-y-8">
+          {/* Mobile Only Branding */}
+          <div className="md:hidden flex flex-col items-center mb-8">
+            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-[#0A192F] font-black text-2xl shadow-xl shadow-orange-500/20 mb-4 transform rotate-3">Z</div>
+            <h1 className="text-3xl font-bold tracking-tight text-[#0A192F]">Zutomate</h1>
+            <div className="w-12 h-1 bg-orange-500 mt-2 rounded-full"></div>
+          </div>
+
           <div className="text-center md:text-left">
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Create Account</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-600 font-medium">
               Get started with your free account
             </p>
           </div>
