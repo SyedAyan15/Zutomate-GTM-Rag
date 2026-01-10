@@ -81,22 +81,22 @@ export default function SignupForm() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 md:bg-white">
-      {/* Left Side - Hero/Branding */}
-      <div className="hidden md:flex flex-1 bg-[#0A192F] items-center justify-center p-12 relative overflow-hidden">
+      {/* Left Side - Hero/Branding (Stacked on Mobile) */}
+      <div className="flex w-full md:flex-1 bg-[#0A192F] items-center justify-center p-8 md:p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] to-[#112240] opacity-90"></div>
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-orange-500 rounded-full blur-[100px] opacity-10"></div>
+        <div className="absolute bottom-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-orange-500 rounded-full blur-[60px] md:blur-[100px] opacity-10"></div>
 
-        <div className="relative z-10 text-white max-w-lg">
-          <h1 className="text-5xl font-bold mb-6 tracking-tight leading-tight">
+        <div className="relative z-10 text-white max-w-lg text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight leading-tight">
             Join <span className="text-orange-500">Zutomate</span>
           </h1>
-          <div className="w-64 h-1 bg-orange-500 mb-8 rounded-full"></div>
-          <p className="text-2xl font-bold text-gray-300 italic">
+          <div className="w-24 md:w-64 h-1 bg-orange-500 mb-6 md:mb-8 rounded-full mx-auto md:mx-0"></div>
+          <p className="text-lg md:text-2xl font-bold text-gray-300 italic">
             Your First Go-to Market AI Agent
           </p>
-          <p className="mt-8 text-gray-400 leading-relaxed">
+          <p className="hidden md:block mt-8 text-gray-400 leading-relaxed">
             Create your account today to start leveraging AI for your market strategy. Secure, fast, and intelligent.
           </p>
         </div>
@@ -105,13 +105,6 @@ export default function SignupForm() {
       {/* Right Side - Signup Form */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-12 lg:p-16">
         <div className="max-w-md w-full space-y-8">
-          {/* Mobile Only Branding */}
-          <div className="md:hidden flex flex-col items-center mb-8">
-            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-[#0A192F] font-black text-2xl shadow-xl shadow-orange-500/20 mb-4 transform rotate-3">Z</div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#0A192F]">Zutomate</h1>
-            <div className="w-12 h-1 bg-orange-500 mt-2 rounded-full"></div>
-          </div>
-
           <div className="text-center md:text-left">
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Create Account</h2>
             <p className="mt-2 text-sm text-gray-600 font-medium">
