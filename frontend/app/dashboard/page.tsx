@@ -125,9 +125,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0A192F] text-white border-b border-[#112240] z-20">
+    <div className="h-[100dvh] flex flex-col bg-slate-50 overflow-hidden relative">
+      {/* Sticky Mobile Header */}
+      <div className="md:hidden sticky top-0 flex items-center justify-between px-4 py-3 bg-[#0A192F] text-white border-b border-[#112240] z-30">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsSidebarOpen(true)}
@@ -145,7 +145,7 @@ export default function DashboardPage() {
         {/* Sidebar Overlay for Mobile */}
         {isSidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/60 z-[35] md:hidden backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}

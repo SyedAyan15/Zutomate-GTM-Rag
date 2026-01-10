@@ -349,13 +349,13 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-2 py-4 md:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 md:px-0 py-4">
+        <div className="max-w-3xl mx-auto md:w-full">
           <MessageList messages={messages} loading={loading} />
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="max-w-4xl w-full mx-auto px-2 md:px-4 pb-2 md:pb-4">
+      <div className="w-full max-w-3xl mx-auto px-4 pb-4 md:pb-8">
         <MessageInput onSendMessage={handleSendMessage} disabled={loading} />
       </div>
     </div>

@@ -28,18 +28,18 @@ export default function MessageList({ messages, loading }: MessageListProps) {
         >
           <div
             className={cn(
-              "max-w-[92%] md:max-w-[85%] lg:max-w-[75%] px-4 md:px-5 py-3 md:py-4 rounded-2xl shadow-sm transition-all",
+              "max-w-[92%] md:max-w-[85%] lg:max-w-[80%] px-4 py-3 md:px-6 md:py-4 rounded-2xl transition-all relative group",
               message.role === 'user'
-                ? 'bg-[#0A192F] text-white border-b-2 border-orange-500 rounded-tr-none ml-auto'
-                : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none mr-auto'
+                ? 'bg-[#0A192F] text-white shadow-md rounded-br-none ml-auto'
+                : 'bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-none mr-auto'
             )}
           >
             <div
               className={cn(
-                "prose prose-sm leading-relaxed break-words",
+                "prose prose-sm md:prose-base leading-relaxed break-words",
                 message.role === 'user'
-                  ? "prose-invert prose-p:text-white prose-a:text-orange-300 prose-headings:text-white prose-strong:text-orange-200"
-                  : "prose-headings:text-[#0A192F] prose-a:text-orange-600 prose-strong:text-[#0A192F] text-gray-800"
+                  ? "prose-invert prose-p:text-white prose-strong:text-orange-200 prose-headings:text-white"
+                  : "prose-headings:text-[#0A192F] prose-strong:text-[#0A192F] prose-p:text-gray-700"
               )}
             >
               <ReactMarkdown
