@@ -232,19 +232,24 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
       if (!response.ok) throw new Error(data.details || data.error || 'Failed to send')
 
       // 3. SHOW ASSISTANT MESSAGE IMMEDIATELY
-      // Use fallback fields if response format varies
-      const assistantContent = data.response || data.answer || data.message || ''
+      // Robustly extract content from various possible response formats
+      const assistantContent = (
+        data?.response ||
+        data?.answer ||
+        data?.message ||
+        (typeof data === 'string' ? data : '')
+      );
 
-      if (!assistantContent) {
+      if (!assistantContent || assistantContent.trim().length === 0) {
         console.warn('DEBUG: No content found in response', data)
-        return // Don't add empty message
+        throw new Error('The AI agent returned an empty response. Please try reframing your question.')
       }
 
       const assistantMsg: Message = {
         id: `temp-assistant-${crypto.randomUUID()}`,
         chat_id: chatId,
         user_id: user.id,
-        content: assistantContent,
+        content: assistantContent.trim(),
         role: 'assistant',
         created_at: new Date().toISOString(),
       }

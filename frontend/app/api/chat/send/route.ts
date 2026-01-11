@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         console.error('Python Backend returned non-JSON:', responseTextForLog);
         return NextResponse.json({
-          error: 'Backend Malformed Response',
-          details: 'The RAG server returned an unexpected response format.'
+          response: 'Zutomate backend is busy or returned an invalid format. Please try again in 5 seconds.',
+          error: 'Backend Malformed Response'
         }, { status: 500 });
       }
 

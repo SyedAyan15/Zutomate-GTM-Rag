@@ -172,7 +172,7 @@ async def chat(request: ChatRequest):
             return {"response": response}
         except Exception as llm_err:
              print(f"CRITICAL: LLM fallback failed: {llm_err}")
-             return {"response": "I encountered an error processing your request. Please try again in a moment.", "error": str(e)}
+             return {"response": "I encountered an error processing your request. Please try again in a moment."}
 
 class TitleRequest(BaseModel):
     message: str

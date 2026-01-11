@@ -40,7 +40,7 @@ export default function SignupForm() {
           data: {
             username: username || email.split('@')[0],
           },
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: 'https://gtmagent.zutomate.com/login',
         },
       })
 
