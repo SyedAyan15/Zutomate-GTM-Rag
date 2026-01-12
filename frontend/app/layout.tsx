@@ -7,6 +7,16 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Zutomate',
   description: 'Chat with your AI assistant',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon.jpg' },
+      { url: '/icon.png' },
+    ],
+    apple: [
+      { url: '/icon.png' },
+    ],
+  },
 }
 
 export default function RootLayout({
