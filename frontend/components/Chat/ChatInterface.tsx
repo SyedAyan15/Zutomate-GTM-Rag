@@ -326,11 +326,9 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-orange-500 rounded-full blur-[100px] opacity-10"></div>
 
         <div className="relative z-10 text-center max-w-lg px-6">
-          <h1 className="text-4xl font-bold mb-4 tracking-tight text-orange-500">
-            Zutomate
-          </h1>
+          <img src="/logo.png" alt="Zutomate" className="h-16 md:h-20 mx-auto mb-6 object-contain" />
           <div className="w-24 h-1 bg-orange-500 mx-auto mb-6 rounded-full"></div>
-          <h2 className="text-2xl font-bold text-white mb-8 italic">
+          <h2 className="text-2xl font-bold text-orange-500 mb-8 italic">
             Your First Go-to Market AI Agent
           </h2>
           <button

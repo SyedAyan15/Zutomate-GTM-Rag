@@ -180,11 +180,8 @@ export default function ChatSidebar({
   return (
     <div className="w-full h-full bg-[#0A192F] border-r border-[#112240] flex flex-col text-white shadow-2xl">
       <div className="p-5 border-b border-[#112240] flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-[#0A192F] font-black text-xl shadow-lg">Z</div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Zutomate
-          </span>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Zutomate" className="h-8 object-contain" />
         </div>
         <button
           onClick={onClose}
