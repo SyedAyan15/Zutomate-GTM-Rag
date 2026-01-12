@@ -329,7 +329,7 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
           <h1 className="text-4xl font-bold mb-4 tracking-tight text-white">
             Zutomate
           </h1>
-          <div className="w-24 h-1 bg-orange-500 mx-auto mb-6 rounded-full"></div>
+          <div className="w-24 h-1 bg-white mx-auto mb-6 rounded-full"></div>
           <h2 className="text-2xl font-bold text-orange-500 mb-8 italic">
             Your First Go-to Market AI Agent
           </h2>

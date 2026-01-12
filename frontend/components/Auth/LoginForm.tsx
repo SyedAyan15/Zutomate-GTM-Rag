@@ -96,7 +96,7 @@ export default function LoginForm() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight leading-tight text-white">
             Zutomate
           </h1>
-          <div className="w-24 md:w-48 h-1 bg-orange-500 mb-6 md:mb-8 rounded-full mx-auto md:mx-0"></div>
+          <div className="w-24 md:w-48 h-1 bg-white mb-6 md:mb-8 rounded-full mx-auto md:mx-0"></div>
           <p className="text-lg md:text-2xl font-bold text-orange-500 italic">
             Your First Go-to Market AI Agent
           </p>
