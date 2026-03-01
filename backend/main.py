@@ -2,6 +2,8 @@ import os
 import json
 import requests
 import shutil
+import tempfile
+from openai import OpenAI
 import uvicorn
 import sys
 from typing import List, Optional
@@ -315,6 +317,51 @@ async def delete_file(filename: str):
     except Exception as e:
         print(f"Error: DELETE ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============ VOICE TRANSCRIPTION ============
+
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+@app.post("/api/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    """Transcribe audio file to text using OpenAI Whisper"""
+    print(f"DEBUG: Transcribe request - filename: {file.filename}, content_type: {file.content_type}")
+    temp_path = None
+    try:
+        # Determine file extension from content type or filename
+        ext = ".webm"
+        if file.filename:
+            _, ext_from_name = os.path.splitext(file.filename)
+            if ext_from_name:
+                ext = ext_from_name
+        
+        # Save uploaded audio to a temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            temp_path = tmp.name
+        
+        print(f"DEBUG: Audio saved to {temp_path} ({len(content)} bytes)")
+        
+        # Call OpenAI Whisper API
+        with open(temp_path, "rb") as audio_file:
+            transcript = openai_client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                language="en"
+            )
+        
+        transcribed_text = transcript.text
+        print(f"DEBUG: Transcription result: '{transcribed_text[:100]}...'")
+        
+        return {"text": transcribed_text}
+    
+    except Exception as e:
+        print(f"TRANSCRIBE ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 # ============ SYSTEM SETTINGS ============
 
