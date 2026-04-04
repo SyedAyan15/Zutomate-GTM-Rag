@@ -13,9 +13,9 @@ interface MessageListProps {
 export default function MessageList({ messages, loading }: MessageListProps) {
   if (messages.length === 0 && !loading) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        <p>Start a conversation by sending a message below.</p>
-      </div>
+    <div className="flex items-center justify-center h-full text-[var(--muted)]">
+      <p>Start a conversation by sending a message below.</p>
+    </div>
     )
   }
 
@@ -28,18 +28,13 @@ export default function MessageList({ messages, loading }: MessageListProps) {
         >
           <div
             className={cn(
-              "max-w-[92%] md:max-w-[85%] lg:max-w-[80%] px-4 py-3 md:px-6 md:py-4 rounded-2xl transition-all relative group",
-              message.role === 'user'
-                ? 'bg-[#0A192F] text-white shadow-md rounded-br-none ml-auto'
-                : 'bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-none mr-auto'
+               "relative group",
+               message.role === 'user' ? 'bubble-user' : 'bubble-assistant'
             )}
           >
             <div
               className={cn(
-                "prose prose-sm md:prose-base leading-relaxed break-words",
-                message.role === 'user'
-                  ? "prose-invert prose-p:text-white prose-strong:text-orange-200 prose-headings:text-white"
-                  : "prose-headings:text-[#0A192F] prose-strong:text-[#0A192F] prose-p:text-gray-700"
+                "prose prose-invert prose-sm md:prose-base break-words prose-p:text-inherit prose-headings:text-inherit prose-strong:text-white"
               )}
             >
               <ReactMarkdown
@@ -57,8 +52,8 @@ export default function MessageList({ messages, loading }: MessageListProps) {
             </div>
             <p
               className={cn(
-                "text-[10px] mt-2 opacity-60 text-right font-medium",
-                message.role === 'user' ? 'text-orange-200' : 'text-gray-400'
+                "text-[10px] mt-2 text-right font-medium",
+                message.role === 'user' ? 'text-[var(--white)] opacity-60' : 'text-[var(--muted)]'
               )}
             >
               {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -67,19 +62,17 @@ export default function MessageList({ messages, loading }: MessageListProps) {
         </div>
       ))
       }
-      {
-        loading && (
+      {loading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-100 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+            <div className="bubble-assistant">
+              <div className="flex space-x-2 py-1">
+                <div className="typing-dot" style={{ animationDelay: '0s' }}></div>
+                <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
+                <div className="typing-dot" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           </div>
-        )
-      }
+        )}
     </div >
   )
 }

@@ -91,32 +91,32 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all border border-gray-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="card-default w-full max-w-md !p-0 overflow-hidden relative border-none">
                 {/* Header */}
-                <div className="bg-[#0A192F] px-8 py-6 relative">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Upload Knowledge</h2>
-                    <p className="text-sm text-gray-400 mt-1">Enhance Zutomate with your documents</p>
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--orange)] z-10"></div>
+                <div className="bg-[var(--navy-card)] border-b border-[var(--border)] px-8 py-6 relative">
+                    <h2 className="text-xl tracking-tight text-[var(--white)]">Upload Knowledge</h2>
+                    <p className="text-sm text-[var(--muted)] mt-1">Enhance Zutomate with your documents</p>
                 </div>
 
                 <div className="p-8">
-                    <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                    <p className="text-sm text-[var(--muted)] mb-6 leading-relaxed">
                         Upload your business documents (PDF or Text). Zutomate will index them to provide specialized GTM insights.
                     </p>
 
                     <div className="mb-6">
                         <label className="block w-full cursor-pointer group">
-                            <div className={`border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center space-y-3 ${file ? 'border-orange-500 bg-orange-50/30' : 'border-gray-200 hover:border-orange-400 hover:bg-gray-50'
+                            <div className={`border border-dashed rounded-xl p-8 transition-hover flex flex-col items-center justify-center space-y-3 ${file ? 'border-[var(--orange)] bg-[var(--orange-dim)]/20' : 'border-[var(--border-hi)] hover:border-[var(--orange)] bg-transparent'
                                 }`}>
-                                <div className={`text-3xl transition-transform group-hover:scale-110 ${file ? 'text-orange-500' : 'text-gray-400'}`}>
+                                <div className={`text-3xl transition-transform group-hover:scale-110 ${file ? 'text-[var(--orange)]' : 'opacity-50'}`}>
                                     {file ? '📄' : '📤'}
                                 </div>
-                                <span className={`text-sm font-bold ${file ? 'text-orange-700' : 'text-gray-500'}`}>
+                                <span className={`text-sm font-bold ${file ? 'text-[var(--white)]' : 'text-[var(--muted)]'}`}>
                                     {file ? file.name : 'Select PDF or Text File'}
                                 </span>
                                 {file && (
-                                    <span className="text-[10px] text-orange-400 uppercase font-black tracking-widest">
+                                    <span className="small-label text-[var(--orange)] mt-1">
                                         {(file.size / 1024).toFixed(1)} KB
                                     </span>
                                 )}
@@ -145,7 +145,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                     <div className="flex gap-3">
                         <button
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 text-gray-500 font-bold text-sm hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+                            className="btn-secondary !w-auto flex-1 flex items-center justify-center"
                             disabled={uploading}
                         >
                             Cancel
@@ -153,12 +153,11 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                         <button
                             onClick={handleUpload}
                             disabled={!file || uploading}
-                            className={`flex-[2] py-3 px-4 bg-[#0A192F] text-white font-bold rounded-xl transition-all shadow-lg shadow-gray-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${!file ? '' : 'hover:bg-[#112240]'
-                                }`}
+                            className="btn-primary !w-auto flex-[2] flex justify-center items-center disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             {uploading ? (
                                 <span className="flex items-center">
-                                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-[var(--white)]" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>

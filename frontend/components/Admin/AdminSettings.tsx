@@ -94,43 +94,43 @@ export default function AdminSettings() {
     }
 
     return (
-        <div className="p-6 max-w-4xl bg-slate-50 min-h-full">
+        <div className="p-6 max-w-4xl bg-transparent min-h-full mx-auto">
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">System Settings</h2>
-                <p className="text-sm text-gray-500 font-medium">Global configuration for your Zutomate AI Agent</p>
+                <h2 className="mb-2">System Settings</h2>
+                <p className="text-[var(--muted)] font-medium">Global configuration for your Zutomate AI Agent</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8">
+            <div className="card-default p-8 space-y-8">
                 {/* System Prompt Section */}
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-[var(--off)] mb-2">
                         System Prompt
                     </label>
-                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                    <p className="text-sm text-[var(--muted)] mb-4 leading-relaxed">
                         This instruction defines the core personality and behavior of the Zutomate agent. Use this to set the tone, expertise, and operational boundaries.
                     </p>
                     <textarea
                         value={systemPrompt}
                         onChange={(e) => setSystemPrompt(e.target.value)}
                         rows={10}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-gray-50 text-gray-900 placeholder-gray-400 font-mono text-sm"
+                        className="input-field w-full font-mono text-sm"
                         placeholder="e.g. You are Zutomate, a specialized Go-to Market AI Assistant..."
                     />
                 </div>
 
                 {/* Model Info Section */}
-                <div className="pt-6 border-t border-gray-100">
-                    <label className="block text-sm font-bold text-gray-700 mb-4">
+                <div className="pt-6 border-t border-[var(--border)]">
+                    <label className="block text-sm font-bold text-[var(--off)] mb-4">
                         AI Engine Configuration
                     </label>
-                    <div className="bg-[#0A192F]/5 px-6 py-4 rounded-xl border border-[#0A192F]/10 flex items-center justify-between">
+                    <div className="bg-[var(--navy)] px-6 py-4 rounded-xl border border-[var(--border)] flex items-center justify-between">
                         <div>
-                            <span className="text-sm font-semibold text-[#0A192F]">Current Model</span>
-                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">High-Performance LLM</p>
+                            <span className="text-sm font-semibold text-[var(--off)]">Current Model</span>
+                            <p className="small-label text-[var(--muted)] mt-1 block">High-Performance LLM</p>
                         </div>
-                        <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-bold text-gray-900">GPT-4o</span>
+                        <div className="flex items-center space-x-2 bg-[var(--faint)] px-4 py-2 rounded-lg border border-[var(--border)] shadow-sm">
+                            <div className="typing-dot !w-2 !h-2"></div>
+                            <span className="text-sm font-bold text-[var(--white)]">GPT-4o</span>
                         </div>
                     </div>
                 </div>
@@ -153,11 +153,11 @@ export default function AdminSettings() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="px-8 py-3 bg-[#0A192F] text-white font-bold rounded-xl hover:bg-[#112240] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-gray-200 transform active:scale-95"
+                        className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? (
                             <span className="flex items-center">
-                                <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-[var(--white)]" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>

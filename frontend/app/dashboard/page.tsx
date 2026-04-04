@@ -99,22 +99,16 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0A192F] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] to-[#112240] opacity-90"></div>
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
         <div className="flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
-          <div className="bg-white/5 backdrop-blur-md p-10 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl">
-            <h1 className="text-4xl font-bold text-orange-500 mb-2">Zutomate</h1>
-            <div className="w-16 h-1 bg-orange-500 mx-auto mb-8 rounded-full"></div>
-
-            <h2 className="text-2xl font-bold text-white mb-4">Session Expired</h2>
-            <p className="text-gray-400 mb-8 leading-relaxed">
+          <div className="card-accent max-w-md w-full">
+            <h2 className="mb-4">Session Expired</h2>
+            <p className="text-[var(--muted)] mb-8 leading-relaxed">
               We couldn't find an active login session. Please sign in again to continue.
             </p>
             <a
               href="/login"
-              className="block w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/20 transform hover:-translate-y-1"
+              className="btn-primary block w-full text-center"
             >
               Back to Login
             </a>
@@ -125,18 +119,18 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-slate-50 overflow-hidden relative">
+    <div className="h-[100dvh] flex flex-col bg-transparent overflow-hidden relative">
       {/* Sticky Mobile Header */}
-      <div className="md:hidden sticky top-0 flex items-center justify-between px-4 py-3 bg-[#0A192F] text-white border-b border-[#112240] z-30">
+      <div className="md:hidden sticky top-0 flex items-center justify-between px-4 py-3 bg-[var(--navy-card)] border-b border-[var(--border)] z-30">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 -ml-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 -ml-2 rounded-lg transition-colors"
           >
-            <Menu className="h-6 w-6 text-orange-500" />
+            <Menu className="h-6 w-6 text-[var(--orange)]" />
           </button>
-          <span className="font-bold tracking-tight text-lg">
-            <span className="text-orange-500">Z</span>utomate
+          <span className="font-['Bricolage_Grotesque'] font-bold tracking-tight text-lg text-[var(--white)]">
+            Zutomate
           </span>
         </div>
       </div>
@@ -180,12 +174,12 @@ export default function DashboardPage() {
             <ChatInterface key={chatId} chatId={chatId} onChatChange={setChatId} isAdmin={isAdmin} />
           )}
           {activeView === 'knowledge' && (
-            <div className="flex-1 overflow-y-auto bg-white">
+            <div className="flex-1 overflow-y-auto bg-transparent">
               <KnowledgeBase key={refreshKey} />
             </div>
           )}
           {activeView === 'settings' && (
-            <div className="flex-1 overflow-y-auto bg-white p-4 md:p-8">
+            <div className="flex-1 overflow-y-auto bg-transparent p-4 md:p-8">
               <AdminSettings />
             </div>
           )}

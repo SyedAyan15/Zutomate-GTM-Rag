@@ -3,11 +3,253 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
+  --navy:       #0d1b2e;   /* Page background — ALWAYS use this, never black */
+  --navy-card:  #0f2038;   /* Slightly lighter card background */
+  --orange:     #F26522;   /* Primary accent, CTAs, highlights, active states */
+  --orange-dim: #c84e12;   /* Orange hover state */
+  --white:      #ffffff;
+  --off:        rgba(255,255,255,0.88);   /* Primary text */
+  --muted:      rgba(255,255,255,0.45);   /* Secondary / body text */
+  --faint:      rgba(255,255,255,0.08);   /* Borders, dividers */
+  --border:     rgba(255,255,255,0.08);   /* Default border */
+  --border-hi:  rgba(255,255,255,0.14);   /* Hover border */
+  
+  --dur-fast:   150ms;
+  --dur-normal: 220ms;
+  --dur-slow:   400ms;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #f9fafb;
+  background-color: var(--navy);
+  color: var(--off);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.75;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 500;
+  color: var(--white);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  letter-spacing: -0.3px;
+}
+
+.sub-heading {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 600;
+}
+
+.label, .tag, .meta {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+
+.small-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.10);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+.transition-hover {
+  transition: all 0.2s ease;
+}
+
+/* Component Classes */
+.card-default {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  transition: background 0.2s, border-color 0.2s;
+  padding: 32px 28px;
+}
+.card-default:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.14);
+}
+
+.card-compact {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  transition: background 0.2s, border-color 0.2s;
+  padding: 1.4rem 1.5rem;
+}
+.card-compact:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.14);
+}
+
+.card-accent {
+  background: rgba(242,101,34,0.06);
+  border: 1px solid rgba(242,101,34,0.20);
+  border-radius: 12px;
+  padding: 32px 28px;
+}
+
+.btn-primary {
+  background: var(--orange);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 12px 28px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: rgba(255,255,255,0.80);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 12px 28px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-secondary:hover {
+  border-color: rgba(255,255,255,0.30);
+  color: var(--white);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 18px 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.70);
+  position: relative;
+}
+.badge::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 2px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+.section-tag {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+  background: rgba(242,101,34,0.10);
+  border: 1px solid rgba(242,101,34,0.25);
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.input-field {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.88);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  padding: 14px 18px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.input-field:focus {
+  border-color: rgba(242,101,34,0.5);
+  background: rgba(255,255,255,0.06);
+}
+.input-field::placeholder {
+  color: rgba(255,255,255,0.30);
+}
+
+.bubble-user {
+  background: rgba(242,101,34,0.12);
+  border: 1px solid rgba(242,101,34,0.25);
+  border-radius: 16px 16px 4px 16px;
+  padding: 12px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.90);
+  max-width: 75%;
+  align-self: flex-end;
+}
+
+.bubble-assistant {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 16px 16px 16px 4px;
+  padding: 12px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.85);
+  max-width: 80%;
+  align-self: flex-start;
+  line-height: 1.65;
+}
+
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(242,101,34,0.6);
+  animation: dotBounce 1.2s infinite;
+}
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}

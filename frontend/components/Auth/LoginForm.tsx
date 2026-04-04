@@ -84,23 +84,19 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 md:bg-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-transparent">
       {/* Left Side - Hero/Branding (Stacked on Mobile) */}
-      <div className="flex w-full md:flex-1 bg-[#0A192F] items-center justify-center p-8 md:p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] to-[#112240] opacity-90"></div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-        <div className="absolute bottom-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-orange-500 rounded-full blur-[60px] md:blur-[100px] opacity-10"></div>
+      <div className="flex w-full md:flex-1 bg-[var(--navy-card)] border-r border-[var(--border)] items-center justify-center p-8 md:p-12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--orange)]"></div>
 
-        <div className="relative z-10 text-white max-w-lg text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight leading-tight text-white">
+        <div className="relative z-10 text-[var(--white)] max-w-lg text-center md:text-left">
+          <h1 className="mb-4 md:mb-6">
             Zutomate
           </h1>
-          <div className="w-24 md:w-48 h-1 bg-white mb-6 md:mb-8 rounded-full mx-auto md:mx-0"></div>
-          <p className="text-lg md:text-2xl font-bold text-orange-500 italic">
+          <p className="text-lg md:text-2xl font-bold text-[var(--orange)] italic">
             Your First Go-to Market AI Agent
           </p>
-          <p className="hidden md:block mt-8 text-gray-400 leading-relaxed">
+          <p className="hidden md:block mt-8 text-[var(--muted)] leading-relaxed">
             Experience the power of AI-driven market analysis. Access your knowledge base, generate strategies, and accelerate your growth with precision.
           </p>
         </div>
@@ -110,8 +106,8 @@ export default function LoginForm() {
       <div className="flex-1 flex items-center justify-center p-8 md:p-12 lg:p-16">
         <div className="max-w-md w-full space-y-10">
           <div className="text-center md:text-left">
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome Back</h2>
-            <p className="mt-2 text-sm text-gray-600 font-medium">
+            <h2 className="text-[var(--white)] tracking-tight">Welcome Back</h2>
+            <p className="mt-2 text-sm text-[var(--muted)] font-medium">
               Please sign in to your account
             </p>
           </div>
@@ -132,11 +128,11 @@ export default function LoginForm() {
 
             <div className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-semibold text-[var(--off)] mb-1">
                   Email Address
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--muted)]">
                     <Mail className="h-5 w-5" />
                   </div>
                   <input
@@ -146,17 +142,17 @@ export default function LoginForm() {
                     placeholder="name@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors bg-white text-gray-900 placeholder-gray-400 shadow-sm"
+                    className="input-field block w-full !pl-10"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-semibold text-[var(--off)] mb-1">
                   Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--muted)]">
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
@@ -166,12 +162,12 @@ export default function LoginForm() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors bg-white text-gray-900 placeholder-gray-400 shadow-sm"
+                    className="input-field block w-full !pl-10 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--muted)] hover:text-[var(--white)] focus:outline-none"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -189,9 +185,9 @@ export default function LoginForm() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                  className="h-4 w-4 bg-[var(--navy-card)] border-[var(--border)] rounded accent-[var(--orange)]"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-[var(--muted)]">
                   Remember me
                 </label>
               </div>
@@ -201,7 +197,7 @@ export default function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-bold text-white bg-[#0A192F] hover:bg-[#112240] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A192F] transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full btn-primary flex justify-center items-center py-3 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center">
@@ -216,11 +212,9 @@ export default function LoginForm() {
           </form>
 
           <div className="mt-6">
-
-
-            <p className="mt-8 text-center text-sm text-gray-600">
+            <p className="mt-8 text-center text-sm text-[var(--muted)]">
               Don't have an account?{' '}
-              <a href="/signup" className="font-bold text-orange-600 hover:text-orange-500 transition-colors">
+              <a href="/signup" className="font-bold text-[var(--orange)] hover:text-[var(--orange-dim)] transition-colors">
                 Sign up now
               </a>
             </p>
