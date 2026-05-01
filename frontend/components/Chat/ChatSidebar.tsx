@@ -141,9 +141,7 @@ export default function ChatSidebar({
   return (
     <div className="w-full h-full bg-[var(--navy-card)] border-r border-[var(--border)] flex flex-col text-[var(--off)] shadow-2xl">
       <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
-        <span className="text-xl font-['Bricolage_Grotesque'] font-bold tracking-tight text-[var(--white)]">
-          Zutomate
-        </span>
+        <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="h-7" />
         <button
           onClick={onClose}
           className="md:hidden p-2 hover:bg-white/10 rounded-full transition-colors"

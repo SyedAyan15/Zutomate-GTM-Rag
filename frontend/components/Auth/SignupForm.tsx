@@ -87,9 +87,11 @@ export default function SignupForm() {
         <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--orange)]"></div>
 
         <div className="relative z-10 text-[var(--white)] max-w-lg text-center md:text-left">
-          <h1 className="mb-4 md:mb-6">
-            Zutomate
-          </h1>
+          <img
+            src="/zutomate-logo-transparent.svg"
+            alt="Zutomate"
+            className="mb-4 md:mb-6 w-64 md:w-80"
+          />
           <p className="text-lg md:text-2xl font-bold text-[var(--orange)] italic">
             Your First Go-to Market AI Agent
           </p>
