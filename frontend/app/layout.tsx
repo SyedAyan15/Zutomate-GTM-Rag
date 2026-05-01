@@ -6,12 +6,11 @@ export const metadata: Metadata = {
   description: 'Chat with your AI assistant',
   icons: {
     icon: [
+      { url: '/zutomate-logo.svg', type: 'image/svg+xml' },
       { url: '/favicon.ico' },
-      { url: '/favicon.jpg' },
-      { url: '/icon.png' },
     ],
     apple: [
-      { url: '/icon.png' },
+      { url: '/zutomate-logo.svg' },
     ],
   },
 }
