@@ -113,17 +113,15 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         console.error('Python Backend returned non-JSON:', responseTextForLog);
         return NextResponse.json({
-          response: 'Zutomate backend is busy or returned an invalid format. Please try again in 5 seconds.',
-          error: 'Backend Malformed Response'
-        }, { status: 500 });
+          response: 'I\'m having trouble connecting to the AI service right now. Please try again in a few seconds.',
+        }, { status: 200 });
       }
 
       if (!response.ok) {
         console.error('Python Backend Error:', data)
         return NextResponse.json({
-          error: 'Backend Error',
-          details: data?.detail || data?.error || 'The RAG server failed to process the message.'
-        }, { status: 500 })
+          response: data?.detail || data?.error || 'The AI service encountered an error. Please try again.',
+        }, { status: 200 })
       }
 
       const backendResponse = data.response || data.message || 'I processed your request.'

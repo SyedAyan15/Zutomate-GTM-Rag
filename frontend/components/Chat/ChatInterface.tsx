@@ -288,7 +288,7 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         id: crypto.randomUUID(),
         chat_id: chatId,
         user_id: user.id,
-        content: 'Error: ' + error.message,
+        content: error.message || 'Something went wrong. Please try again.',
         role: 'assistant',
         created_at: new Date().toISOString()
       }])
