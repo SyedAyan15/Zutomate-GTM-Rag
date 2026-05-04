@@ -90,7 +90,7 @@ export default function SignupForm() {
           <img
             src="/zutomate-logo-transparent.svg"
             alt="Zutomate"
-            className="mb-6 md:mb-8 w-72 md:w-full"
+            className="mb-2 md:mb-3 w-72 md:w-full"
           />
           <p className="text-lg md:text-2xl font-bold text-[var(--orange)] italic">
             Your First Go-to Market AI Agent
