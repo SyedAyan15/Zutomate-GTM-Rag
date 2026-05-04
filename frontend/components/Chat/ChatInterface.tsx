@@ -324,7 +324,7 @@ export default function ChatInterface({ chatId, onChatChange, isAdmin = false }:
         <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--orange)]"></div>
 
         <div className="relative z-10 text-center max-w-lg px-6 card-default bg-transparent border-none">
-          <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="mb-4 w-64 mx-auto" />
+          <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="mb-6 w-80 md:w-96 mx-auto" />
           <h3 className="text-[var(--orange)] mb-8 !font-medium">
             Your First Go-to Market AI Agent
           </h3>
