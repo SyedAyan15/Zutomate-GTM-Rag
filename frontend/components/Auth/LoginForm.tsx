@@ -89,11 +89,11 @@ export default function LoginForm() {
       <div className="flex w-full md:flex-1 bg-[var(--navy-card)] border-r border-[var(--border)] items-center justify-center p-8 md:p-12 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--orange)]"></div>
 
-        <div className="relative z-10 text-[var(--white)] max-w-lg text-center flex flex-col items-center">
+        <div className="relative z-10 text-[var(--white)] w-full max-w-sm text-center flex flex-col items-center">
           <img
             src="/zutomate-logo-transparent.svg"
             alt="Zutomate"
-            className="mb-6 md:mb-8 w-40 md:w-52 mx-auto"
+            className="mb-8 w-56 md:w-72 mx-auto"
           />
           <p className="text-lg md:text-2xl font-bold text-[var(--orange)] italic">
             Your First Go-to Market AI Agent
