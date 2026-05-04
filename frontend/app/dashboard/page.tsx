@@ -129,7 +129,7 @@ export default function DashboardPage() {
           >
             <Menu className="h-6 w-6 text-[var(--orange)]" />
           </button>
-          <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="h-10 w-auto" />
+          <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="h-10 w-10" />
         </div>
       </div>
 

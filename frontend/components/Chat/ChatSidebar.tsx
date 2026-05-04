@@ -141,9 +141,7 @@ export default function ChatSidebar({
   return (
     <div className="w-full h-full bg-[var(--navy-card)] border-r border-[var(--border)] flex flex-col text-[var(--off)] shadow-2xl">
       <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
-        <div className="flex-1 overflow-hidden" style={{aspectRatio: '5/2', maxWidth: '220px'}}>
-          <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="w-full" />
-        </div>
+        <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="h-14 w-14" />
         <button
           onClick={onClose}
           className="md:hidden p-2 hover:bg-white/10 rounded-full transition-colors"
