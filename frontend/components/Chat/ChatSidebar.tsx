@@ -140,7 +140,7 @@ export default function ChatSidebar({
 
   return (
     <div className="w-full h-full bg-[var(--navy-card)] border-r border-[var(--border)] flex flex-col text-[var(--off)] shadow-2xl">
-      <div className="py-6 px-5 border-b border-[var(--border)] flex items-center justify-center relative">
+      <div className="py-3 px-5 border-b border-[var(--border)] flex items-center justify-center relative">
         <img src="/zutomate-logo-transparent.svg" alt="Zutomate" className="h-24 w-24" />
         <button
           onClick={onClose}
